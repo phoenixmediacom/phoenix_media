@@ -7,10 +7,10 @@ const KEY = "hero";
 seed<HeroContent>(KEY, {
   companyName: "Phoenix Media",
   tagline: "Cinematic Production House",
-  logoUrl: "/phoenix-logo.svg",
+  logoUrl: "/logo.png",
   video: {
     type: "upload",
-    url: "https://cdn.coverr.co/videos/coverr-a-cinema-camera-on-a-film-set-2632/1080p.mp4",
+    url: "https://youtu.be/6eWW-PJBV0w?si=aRCcf42uNCWaOKNZ",
   },
 });
 

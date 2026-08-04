@@ -26,7 +26,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <aside className="w-72 shrink-0 h-full bg-surface-container-lowest border-e border-glass-border flex flex-col">
       <div className="px-6 py-6 flex items-center gap-3 border-b border-glass-border">
-        <img src="/phoenix-logo.svg" alt="" className="h-8 w-8" />
+        <img src="/logo.png" alt="" className="h-8 w-8" />
         <span className="font-display font-bold text-on-surface">Phoenix Media</span>
       </div>
       <nav className="flex-1 overflow-y-auto py-4 px-3 flex flex-col gap-1">

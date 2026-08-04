@@ -6,12 +6,12 @@ const INFO_KEY = "contact:info";
 const SUBMISSIONS_KEY = "contact:submissions";
 
 seed<ContactInfo>(INFO_KEY, {
-  email: "info@phoenixmedia.com",
-  phone: "+966 50 123 4567",
+  email: "phoenixmedia25@gmail.com",
+  phone: "+966583453999",
   address: "Jeddah, Saudi Arabia",
-  whatsapp: "+966501234567",
+  whatsapp: "+966583453999",
   mapEmbedUrl:
-    "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3711.87!2d39.198!3d21.543",
+    "https://maps.app.goo.gl/KhPedMqTTWHqN3Sb9?g_st=ac",
 });
 seed<ContactSubmission[]>(SUBMISSIONS_KEY, []);
 
