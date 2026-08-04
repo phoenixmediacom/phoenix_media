@@ -10,7 +10,7 @@ seed<HeroContent>(KEY, {
   logoUrl: "/logo.png",
   video: {
     type: "upload",
-    url: "https://youtu.be/6eWW-PJBV0w?si=aRCcf42uNCWaOKNZ",
+    url: "https://youtu.be/6eWW-PJBV0w?si=XUCq6kgNFQvqZhUm",
   },
 });
 
