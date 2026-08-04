@@ -9,7 +9,7 @@ seed<HeroContent>(KEY, {
   tagline: "Cinematic Production House",
   logoUrl: "/logo.png",
   video: {
-    type: "upload",
+    type: "youtube",
     url: "https://youtu.be/6eWW-PJBV0w?si=XUCq6kgNFQvqZhUm",
   },
 });
