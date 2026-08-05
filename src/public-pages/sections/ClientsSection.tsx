@@ -12,22 +12,9 @@ interface Client {
 
 function chunkArray<T>(arr: T[], size: number): T[][] {
   const chunks: T[][] = [];
-
   for (let i = 0; i < arr.length; i += size) {
-    const chunk = arr.slice(i, i + size);
-
-    // نكمل الصف الناقص حتى لا ينقطع الدوران
-    if (chunk.length > 0 && chunk.length < size) {
-      let fillIndex = 0;
-      while (chunk.length < size) {
-        chunk.push(arr[fillIndex % arr.length]);
-        fillIndex++;
-      }
-    }
-
-    chunks.push(chunk);
+    chunks.push(arr.slice(i, i + size));
   }
-
   return chunks;
 }
 
@@ -57,49 +44,31 @@ function InfiniteRow({
   const [trackWidth, setTrackWidth] = useState(0);
 
   useEffect(() => {
-    const el = trackRef.current;
-    if (!el) return;
-
-    const measure = () => {
-      setTrackWidth(el.scrollWidth / 2);
-    };
-
-    measure();
-
-    const ro = new ResizeObserver(() => {
-      measure();
-    });
-
-    ro.observe(el);
-    window.addEventListener("resize", measure);
-
-    return () => {
-      ro.disconnect();
-      window.removeEventListener("resize", measure);
-    };
+    if (trackRef.current) {
+      setTrackWidth(trackRef.current.scrollWidth / 2);
+    }
   }, [clients]);
 
-  const duration = trackWidth > 0 ? trackWidth / speed : 20;
+  const direction = reverse ? 1 : -1;
+  const duration = trackWidth / speed;
 
   return (
     <div className="relative w-full overflow-hidden py-3">
       <motion.div
         ref={trackRef}
         className="flex w-max gap-8 md:gap-12"
-        animate={
-          reverse
-            ? { x: [-trackWidth, 0] }
-            : { x: [0, -trackWidth] }
-        }
+        animate={{
+          x: [0, direction * trackWidth],
+        }}
         transition={{
           x: {
-            duration,
+            duration: duration || 20,
             repeat: Infinity,
             ease: "linear",
           },
         }}
-        style={{ willChange: "transform" }}
       >
+        {/* نكرر القائمة مرتين لتحقيق الدوران المستمر */}
         {[...clients, ...clients].map((client, i) => (
           <ClientLogo key={`${client.id}-${i}`} client={client} />
         ))}
@@ -148,7 +117,7 @@ export function ClientsSection() {
   const isRTL = locale === "ar";
 
   const perRow = isMobile ? 4 : 8;
-  const rows = clients && clients.length > 0 ? chunkArray(clients, perRow) : [];
+  const rows = clients ? chunkArray(clients, perRow) : [];
 
   return (
     <section
@@ -204,21 +173,12 @@ export function ClientsSection() {
         )}
       </div>
 
+      {/* Fade edges */}
       <div
-        className={`absolute inset-y-0 ${isRTL ? "right-0" : "left-0"} w-16 md:w-24 z-20 pointer-events-none`}
-        style={{
-          background: isRTL
-            ? "linear-gradient(to left, var(--color-surface-container-lowest), transparent)"
-            : "linear-gradient(to right, var(--color-surface-container-lowest), transparent)",
-        }}
+        className={`absolute inset-y-0 ${isRTL ? "right-0" : "left-0"} w-16 md:w-24 bg-gradient-to-${isRTL ? "l" : "r"} from-surface-container-lowest to-transparent z-20 pointer-events-none`}
       />
       <div
-        className={`absolute inset-y-0 ${isRTL ? "left-0" : "right-0"} w-16 md:w-24 z-20 pointer-events-none`}
-        style={{
-          background: isRTL
-            ? "linear-gradient(to right, var(--color-surface-container-lowest), transparent)"
-            : "linear-gradient(to left, var(--color-surface-container-lowest), transparent)",
-        }}
+        className={`absolute inset-y-0 ${isRTL ? "left-0" : "right-0"} w-16 md:w-24 bg-gradient-to-${isRTL ? "r" : "l"} from-surface-container-lowest to-transparent z-20 pointer-events-none`}
       />
     </section>
   );
