@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { useI18n } from "../../i18n";
 import { useAsync } from "../../hooks/useAsync";
 import { listClients } from "../../services/endpoints/clients";
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 
 interface Client {
   id: string;
@@ -12,92 +12,13 @@ interface Client {
 
 function useIsMobile(breakpoint = 768) {
   const [isMobile, setIsMobile] = useState(false);
-
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < breakpoint);
     check();
     window.addEventListener("resize", check);
     return () => window.removeEventListener("resize", check);
   }, [breakpoint]);
-
   return isMobile;
-}
-
-function InfiniteRow({
-  clients,
-  speed = 40,
-  reverse = false,
-}: {
-  clients: Client[];
-  speed?: number;
-  reverse?: boolean;
-}) {
-  const trackRef = useRef<HTMLDivElement>(null);
-  const [singleSetWidth, setSingleSetWidth] = useState(0);
-
-  const measure = useCallback(() => {
-    if (!trackRef.current) return;
-    const children = trackRef.current.children;
-    const count = clients.length;
-    if (count === 0) return;
-
-    let totalWidth = 0;
-    for (let i = 0; i < count; i++) {
-      const child = children[i] as HTMLElement;
-      if (child) {
-        const style = window.getComputedStyle(child);
-        const marginLeft = parseFloat(style.marginLeft) || 0;
-        const marginRight = parseFloat(style.marginRight) || 0;
-        totalWidth += child.offsetWidth + marginLeft + marginRight;
-      }
-    }
-
-    // أضف الـ gap بين العناصر
-    const gap = window.innerWidth < 768 ? 32 : 48;
-    totalWidth += gap * (count - 1);
-
-    // أضف gap واحد إضافي بين النسخة الأولى والثانية
-    totalWidth += gap;
-
-    setSingleSetWidth(totalWidth);
-  }, [clients]);
-
-  useEffect(() => {
-    measure();
-    window.addEventListener("resize", measure);
-    return () => window.removeEventListener("resize", measure);
-  }, [measure]);
-
-  if (clients.length === 0) return null;
-
-  const duration = singleSetWidth > 0 ? singleSetWidth / speed : 20;
-
-  return (
-    <div className="relative w-full overflow-hidden py-3">
-      <motion.div
-        ref={trackRef}
-        className="flex w-max items-center gap-8 md:gap-12"
-        animate={{
-          x: reverse ? [-singleSetWidth, 0] : [0, -singleSetWidth],
-        }}
-        transition={{
-          x: {
-            duration,
-            repeat: Infinity,
-            ease: "linear",
-            repeatType: "loop",
-          },
-        }}
-        style={{ willChange: "transform" }}
-      >
-        {[...clients, ...clients, ...clients, ...clients].map(
-          (client, i) => (
-            <ClientLogo key={`${client.id}-${i}`} client={client} />
-          )
-        )}
-      </motion.div>
-    </div>
-  );
 }
 
 function ClientLogo({ client }: { client: Client }) {
@@ -127,6 +48,41 @@ function ClientLogo({ client }: { client: Client }) {
   );
 }
 
+function InfiniteRow({
+  clients,
+  duration = 30,
+  reverse = false,
+}: {
+  clients: Client[];
+  duration?: number;
+  reverse?: boolean;
+}) {
+  if (clients.length === 0) return null;
+
+  const direction = reverse ? "scroll-right" : "scroll-left";
+
+  return (
+    <div className="relative w-full overflow-hidden py-3">
+      <div
+        className={`flex w-max items-center gap-8 md:gap-12 ${direction}`}
+        style={{
+          animationDuration: `${duration}s`,
+        }}
+      >
+        {/* نكرر 4 مرات لضمان عدم الانقطاع */}
+        {Array.from({ length: 4 }).map((_, setIndex) =>
+          clients.map((client, i) => (
+            <ClientLogo
+              key={`${setIndex}-${client.id}-${i}`}
+              client={client}
+            />
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function ClientsSection() {
   const { t, locale } = useI18n();
   const {
@@ -139,21 +95,19 @@ export function ClientsSection() {
   const isMobile = useIsMobile();
   const isRTL = locale === "ar";
 
-  // عدد الصفوف حسب الجهاز
   const perRow = isMobile ? 4 : 8;
-  const totalClients = clients?.length ?? 0;
-  const rowCount = totalClients > 0 ? Math.ceil(totalClients / perRow) : 0;
 
   // تقسيم العملاء إلى صفوف
   const rows: Client[][] = [];
-  if (clients) {
-    for (let i = 0; i < rowCount; i++) {
-      const start = i * perRow;
-      const rowClients = clients.slice(start, start + perRow);
+  if (clients && clients.length > 0) {
+    for (let i = 0; i < clients.length; i += perRow) {
+      const rowClients = clients.slice(i, i + perRow);
 
-      // إذا الصف الأخير فيه عناصر أقل، نكمله بتكرار من البداية
-      while (rowClients.length < perRow && clients.length > 0) {
-        rowClients.push(clients[rowClients.length % clients.length]);
+      // إذا الصف الأخير ناقص، نكمله من البداية
+      while (rowClients.length < perRow) {
+        rowClients.push(
+          clients[rowClients.length % clients.length]
+        );
       }
 
       rows.push(rowClients);
@@ -164,8 +118,29 @@ export function ClientsSection() {
     <section
       id="clients"
       className="relative w-full overflow-hidden bg-surface-container-lowest py-20 md:py-28"
-      dir={isRTL ? "rtl" : "ltr"}
     >
+      {/* CSS للدوران المستمر */}
+      <style>{`
+        @keyframes scrollLeft {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+        @keyframes scrollRight {
+          0% { transform: translateX(-50%); }
+          100% { transform: translateX(0); }
+        }
+        .scroll-left {
+          animation: scrollLeft linear infinite;
+        }
+        .scroll-right {
+          animation: scrollRight linear infinite;
+        }
+        .scroll-left:hover,
+        .scroll-right:hover {
+          animation-play-state: paused;
+        }
+      `}</style>
+
       <div className="relative z-10 mx-auto max-w-7xl px-6 md:px-10">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -206,7 +181,7 @@ export function ClientsSection() {
               <InfiniteRow
                 key={rowIndex}
                 clients={row}
-                speed={25 + rowIndex * 3}
+                duration={35 + rowIndex * 5}
                 reverse={isRTL ? rowIndex % 2 === 0 : rowIndex % 2 !== 0}
               />
             ))}
