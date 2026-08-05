@@ -2,20 +2,12 @@ import { motion } from "framer-motion";
 import { useI18n } from "../../i18n";
 import { useAsync } from "../../hooks/useAsync";
 import { listClients } from "../../services/endpoints/clients";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 
 interface Client {
   id: string;
   name: string;
   logoUrl?: string;
-}
-
-function chunkArray<T>(arr: T[], size: number): T[][] {
-  const chunks: T[][] = [];
-  for (let i = 0; i < arr.length; i += size) {
-    chunks.push(arr.slice(i, i + size));
-  }
-  return chunks;
 }
 
 function useIsMobile(breakpoint = 768) {
@@ -41,37 +33,68 @@ function InfiniteRow({
   reverse?: boolean;
 }) {
   const trackRef = useRef<HTMLDivElement>(null);
-  const [trackWidth, setTrackWidth] = useState(0);
+  const [singleSetWidth, setSingleSetWidth] = useState(0);
 
-  useEffect(() => {
-    if (trackRef.current) {
-      setTrackWidth(trackRef.current.scrollWidth / 2);
+  const measure = useCallback(() => {
+    if (!trackRef.current) return;
+    const children = trackRef.current.children;
+    const count = clients.length;
+    if (count === 0) return;
+
+    let totalWidth = 0;
+    for (let i = 0; i < count; i++) {
+      const child = children[i] as HTMLElement;
+      if (child) {
+        const style = window.getComputedStyle(child);
+        const marginLeft = parseFloat(style.marginLeft) || 0;
+        const marginRight = parseFloat(style.marginRight) || 0;
+        totalWidth += child.offsetWidth + marginLeft + marginRight;
+      }
     }
+
+    // أضف الـ gap بين العناصر
+    const gap = window.innerWidth < 768 ? 32 : 48;
+    totalWidth += gap * (count - 1);
+
+    // أضف gap واحد إضافي بين النسخة الأولى والثانية
+    totalWidth += gap;
+
+    setSingleSetWidth(totalWidth);
   }, [clients]);
 
-  const direction = reverse ? 1 : -1;
-  const duration = trackWidth / speed;
+  useEffect(() => {
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [measure]);
+
+  if (clients.length === 0) return null;
+
+  const duration = singleSetWidth > 0 ? singleSetWidth / speed : 20;
 
   return (
     <div className="relative w-full overflow-hidden py-3">
       <motion.div
         ref={trackRef}
-        className="flex w-max gap-8 md:gap-12"
+        className="flex w-max items-center gap-8 md:gap-12"
         animate={{
-          x: [0, direction * trackWidth],
+          x: reverse ? [-singleSetWidth, 0] : [0, -singleSetWidth],
         }}
         transition={{
           x: {
-            duration: duration || 20,
+            duration,
             repeat: Infinity,
             ease: "linear",
+            repeatType: "loop",
           },
         }}
+        style={{ willChange: "transform" }}
       >
-        {/* نكرر القائمة مرتين لتحقيق الدوران المستمر */}
-        {[...clients, ...clients].map((client, i) => (
-          <ClientLogo key={`${client.id}-${i}`} client={client} />
-        ))}
+        {[...clients, ...clients, ...clients, ...clients].map(
+          (client, i) => (
+            <ClientLogo key={`${client.id}-${i}`} client={client} />
+          )
+        )}
       </motion.div>
     </div>
   );
@@ -116,8 +139,26 @@ export function ClientsSection() {
   const isMobile = useIsMobile();
   const isRTL = locale === "ar";
 
+  // عدد الصفوف حسب الجهاز
   const perRow = isMobile ? 4 : 8;
-  const rows = clients ? chunkArray(clients, perRow) : [];
+  const totalClients = clients?.length ?? 0;
+  const rowCount = totalClients > 0 ? Math.ceil(totalClients / perRow) : 0;
+
+  // تقسيم العملاء إلى صفوف
+  const rows: Client[][] = [];
+  if (clients) {
+    for (let i = 0; i < rowCount; i++) {
+      const start = i * perRow;
+      const rowClients = clients.slice(start, start + perRow);
+
+      // إذا الصف الأخير فيه عناصر أقل، نكمله بتكرار من البداية
+      while (rowClients.length < perRow && clients.length > 0) {
+        rowClients.push(clients[rowClients.length % clients.length]);
+      }
+
+      rows.push(rowClients);
+    }
+  }
 
   return (
     <section
@@ -160,12 +201,12 @@ export function ClientsSection() {
         )}
 
         {clients && clients.length > 0 && (
-          <div className="space-y-4">
+          <div className="space-y-2">
             {rows.map((row, rowIndex) => (
               <InfiniteRow
                 key={rowIndex}
                 clients={row}
-                speed={30 + rowIndex * 5}
+                speed={25 + rowIndex * 3}
                 reverse={isRTL ? rowIndex % 2 === 0 : rowIndex % 2 !== 0}
               />
             ))}
@@ -174,12 +215,8 @@ export function ClientsSection() {
       </div>
 
       {/* Fade edges */}
-      <div
-        className={`absolute inset-y-0 ${isRTL ? "right-0" : "left-0"} w-16 md:w-24 bg-gradient-to-${isRTL ? "l" : "r"} from-surface-container-lowest to-transparent z-20 pointer-events-none`}
-      />
-      <div
-        className={`absolute inset-y-0 ${isRTL ? "left-0" : "right-0"} w-16 md:w-24 bg-gradient-to-${isRTL ? "r" : "l"} from-surface-container-lowest to-transparent z-20 pointer-events-none`}
-      />
+      <div className="absolute inset-y-0 left-0 w-16 md:w-24 bg-gradient-to-r from-surface-container-lowest to-transparent z-20 pointer-events-none" />
+      <div className="absolute inset-y-0 right-0 w-16 md:w-24 bg-gradient-to-l from-surface-container-lowest to-transparent z-20 pointer-events-none" />
     </section>
   );
 }
