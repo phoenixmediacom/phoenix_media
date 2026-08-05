@@ -10,7 +10,6 @@ interface VideoBackgroundProps {
 function toYouTubeEmbed(url: string, muted: boolean): string {
   const idMatch = url.match(/(?:v=|youtu\.be\/|embed\/)([\w-]{11})/);
   const id = idMatch?.[1] ?? url;
-
   const params = new URLSearchParams({
     autoplay: "1",
     mute: muted ? "1" : "0",
@@ -24,20 +23,16 @@ function toYouTubeEmbed(url: string, muted: boolean): string {
     fs: "0",
     disablekb: "1",
     iv_load_policy: "3",
+    showinfo: "0",
     cc_load_policy: "0",
   });
-
-  if (typeof window !== "undefined") {
-    params.set("origin", window.location.origin);
-  }
-
+  if (typeof window !== "undefined") params.set("origin", window.location.origin);
   return `https://www.youtube-nocookie.com/embed/${id}?${params.toString()}`;
 }
 
 function toVimeoEmbed(url: string, muted: boolean): string {
   const idMatch = url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
   const id = idMatch?.[1] ?? url;
-
   const params = new URLSearchParams({
     autoplay: "1",
     muted: muted ? "1" : "0",
@@ -45,7 +40,6 @@ function toVimeoEmbed(url: string, muted: boolean): string {
     background: "0",
     controls: "0",
   });
-
   return `https://player.vimeo.com/video/${id}?${params.toString()}`;
 }
 
@@ -54,31 +48,25 @@ export function VideoBackground({ source, muted, onToggleMute }: VideoBackground
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [embedKey, setEmbedKey] = useState(0);
 
+  // Native <video> mute is trivial: it's just a DOM property.
   useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.muted = muted;
-    }
+    if (videoRef.current) videoRef.current.muted = muted;
   }, [muted]);
 
+  // For iframe embeds, best-effort postMessage to the platform's player.
+  // Re-mounting the iframe on toggle (embedKey) guarantees the correct
+  // initial mute param even if a postMessage command is missed.
   useEffect(() => {
     if (source.type === "youtube" && iframeRef.current?.contentWindow) {
       iframeRef.current.contentWindow.postMessage(
-        JSON.stringify({
-          event: "command",
-          func: muted ? "mute" : "unMute",
-          args: [],
-        }),
-        "*"
+        JSON.stringify({ event: "command", func: muted ? "mute" : "unMute", args: [] }),
+        "*",
       );
     }
-
     if (source.type === "vimeo" && iframeRef.current?.contentWindow) {
       iframeRef.current.contentWindow.postMessage(
-        JSON.stringify({
-          method: "setVolume",
-          value: muted ? 0 : 1,
-        }),
-        "*"
+        JSON.stringify({ method: "setVolume", value: muted ? 0 : 1 }),
+        "*",
       );
     }
   }, [muted, source.type]);
@@ -98,10 +86,9 @@ export function VideoBackground({ source, muted, onToggleMute }: VideoBackground
           muted={muted}
           loop
           playsInline
-          className="absolute top-1/2 left-1/2 min-w-full min-h-full w-auto h-auto -translate-x-1/2 -translate-y-1/2 object-cover"
+          className="absolute inset-0 h-full w-full object-cover"
         />
       )}
-
       {source.type === "youtube" && (
         <iframe
           key={embedKey}
@@ -109,10 +96,9 @@ export function VideoBackground({ source, muted, onToggleMute }: VideoBackground
           src={toYouTubeEmbed(source.url, muted)}
           title="Background video"
           allow="autoplay; encrypted-media"
-          className="absolute top-1/2 left-1/2 w-screen h-screen min-w-[177.78vh] min-h-[56.25vw] -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+          className="absolute top-1/2 left-1/2 w-[177.78vh] h-[100vh] min-w-full min-h-full -translate-x-1/2 -translate-y-1/2 pointer-events-none"
         />
       )}
-
       {source.type === "vimeo" && (
         <iframe
           key={embedKey}
@@ -120,12 +106,10 @@ export function VideoBackground({ source, muted, onToggleMute }: VideoBackground
           src={toVimeoEmbed(source.url, muted)}
           title="Background video"
           allow="autoplay; encrypted-media"
-          className="absolute top-1/2 left-1/2 w-screen h-screen min-w-[177.78vh] min-h-[56.25vw] -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+          className="absolute top-1/2 left-1/2 w-[177.78vh] h-[100vh] min-w-full min-h-full -translate-x-1/2 -translate-y-1/2 pointer-events-none"
         />
       )}
-
       <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-surface" />
-
       <button
         onClick={handleToggle}
         aria-label={muted ? "Unmute video" : "Mute video"}
@@ -145,7 +129,6 @@ function MuteIcon() {
     </svg>
   );
 }
-
 function UnmuteIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
