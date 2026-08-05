@@ -15,56 +15,61 @@ export function HeroSection() {
   const progress = useHeroProgress();
 
   return (
-    <section id="hero" className="relative min-h-screen w-full h-full flex items-center justify-center overflow-hidden">
+    <section id="hero" className="relative h-screen w-full flex items-center justify-center overflow-hidden">
       {hero && (
-        <VideoBackground
-          source={hero.video}
-          muted={muted}
-          onToggleMute={() => setMuted((m) => !m)}
-        />
+        <div className="absolute inset-0 z-0">
+          <VideoBackground
+            source={hero.video}
+            muted={muted}
+            onToggleMute={() => setMuted((m) => !m)}
+          />
+        </div>
       )}
 
-      <div className="relative z-10 text-center px-margin-mobile">
-        {loading && <LoadingState />}
-        {error && <ErrorState message={error} onRetry={refetch} />}
-        {hero && (
-          <motion.div
-            style={{ opacity: 1 - progress, transform: `translateY(${progress * -24}px)` }}
-          >
-            <motion.img
-              src={hero.logoUrl}
-              alt={hero.companyName}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1, ease: "easeOut" }}
-              className="h-20 md:h-28 w-auto mx-auto mb-6 object-contain"
-            />
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1, delay: 0.15, ease: "easeOut" }}
-              className="font-display text-display-lg-mobile md:text-display-lg text-on-surface"
-            >
-              {hero.companyName}
-            </motion.h1>
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1, delay: 0.3, ease: "easeOut" }}
-              className="font-mono-label uppercase text-label-sm text-primary mt-4 tracking-widest"
-            >
-              {hero.tagline || t.hero.tagline}
-            </motion.p>
+      {/* طبقة تغميق اختيارية فوق الفيديو لتحسين وضوح النص */}
+      <div className="absolute inset-0 z-[1] bg-black/30" >
+        <div className="relative z-10 text-center px-margin-mobile">
+          {loading && <LoadingState />}
+          {error && <ErrorState message={error} onRetry={refetch} />}
+          {hero && (
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 1, delay: 0.5 }}
-              className="mt-10 flex justify-center"
+              style={{ opacity: 1 - progress, transform: `translateY(${progress * -24}px)` }}
             >
-              <SocialIcons />
+              <motion.img
+                src={hero.logoUrl}
+                alt={hero.companyName}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 1, ease: "easeOut" }}
+                className="h-20 md:h-28 w-auto mx-auto mb-6 object-contain"
+              />
+              <motion.h1
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 1, delay: 0.15, ease: "easeOut" }}
+                className="font-display text-display-lg-mobile md:text-display-lg text-on-surface"
+              >
+                {hero.companyName}
+              </motion.h1>
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 1, delay: 0.3, ease: "easeOut" }}
+                className="font-mono-label uppercase text-label-sm text-primary mt-4 tracking-widest"
+              >
+                {hero.tagline || t.hero.tagline}
+              </motion.p>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 1, delay: 0.5 }}
+                className="mt-10 flex justify-center"
+              >
+                <SocialIcons />
+              </motion.div>
             </motion.div>
-          </motion.div>
-        )}
+          )}
+        </div>
       </div>
 
       <motion.div
