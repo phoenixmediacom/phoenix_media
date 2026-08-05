@@ -375,7 +375,7 @@ const Lightfall = ({
   return (
     <div
       ref={containerRef}
-      className={`lightfall-container ${className ?? ''}`}
+      className={`lightfall-container absolute inset-0 w-full h-full ${className ?? ''}`}
       style={{
         ...(mixBlendMode && { mixBlendMode })
       }}
