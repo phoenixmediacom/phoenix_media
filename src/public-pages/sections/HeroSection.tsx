@@ -15,7 +15,7 @@ export function HeroSection() {
   const progress = useHeroProgress();
 
   return (
-    <section id="hero" className="relative min-h-screen w-full flex items-center justify-center overflow-hidden">
+    <section id="hero" className="relative min-h-screen w-full h-full flex items-center justify-center overflow-hidden">
       {hero && (
         <VideoBackground
           source={hero.video}
