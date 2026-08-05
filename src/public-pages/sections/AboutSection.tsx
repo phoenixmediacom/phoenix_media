@@ -12,14 +12,17 @@ export function AboutSection() {
   const { data: about, loading, error, refetch } = useAsync(() => getAbout(), []);
 
   return (
-    <Section id="about" className="bg-surface">
+    <Section
+      id="about"
+      className="relative isolate overflow-hidden min-h-[100svh] bg-surface"
+    >
       {about && <AnimatedBackground variant={about.backgroundVariant} />}
 
       {loading && <LoadingState />}
       {error && <ErrorState message={error} onRetry={refetch} />}
 
       {about && (
-        <div className="relative grid md:grid-cols-2 gap-12 items-center">
+        <div className="relative z-10 grid md:grid-cols-2 gap-12 items-center">
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
