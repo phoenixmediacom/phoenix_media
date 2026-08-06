@@ -40,8 +40,9 @@ export function ContactSection() {
         <p className="font-body text-body-md text-on-surface-variant mt-3">{t.contact.subtitle}</p>
       </motion.div>
 
-      <div className="grid md:grid-cols-2 gap-10">
-        <form onSubmit={onSubmit} className="flex flex-col gap-5 glass rounded-xl p-6 md:p-8">
+      <div className="grid md:grid-cols-2 gap-6 md:gap-8 lg:gap-10 items-stretch">
+        {/* نموذج التواصل */}
+        <form onSubmit={onSubmit} className="flex flex-col gap-5 glass rounded-2xl p-6 md:p-8 h-full">
           <Field label={t.contact.name} htmlFor="contact-name">
             <Input
               id="contact-name"
@@ -65,19 +66,23 @@ export function ContactSection() {
               required
               value={form.message}
               onChange={(e) => setForm({ ...form, message: e.target.value })}
+              className="flex-1 min-h-[140px] resize-none"
             />
           </Field>
-          <Button type="submit" disabled={status === "sending"}>
-            {status === "sending" ? t.contact.sending : t.contact.send}
-          </Button>
-          {status === "sent" && <p className="text-primary text-sm">{t.contact.sent}</p>}
-          {status === "error" && <p className="text-error text-sm">{t.contact.error}</p>}
+          <div>
+            <Button type="submit" disabled={status === "sending"} className="w-full">
+              {status === "sending" ? t.contact.sending : t.contact.send}
+            </Button>
+            {status === "sent" && <p className="text-primary text-sm mt-2 text-center">{t.contact.sent}</p>}
+            {status === "error" && <p className="text-error text-sm mt-2 text-center">{t.contact.error}</p>}
+          </div>
         </form>
 
-        <div className="flex flex-col gap-8">
+        {/* معلومات الاتصال والخريطة */}
+        <div className="flex flex-col gap-6 md:gap-8 h-full">
           {loading && <LoadingState />}
           {info && (
-            <div className="glass rounded-xl p-6 md:p-8 flex flex-col gap-4">
+            <div className="glass rounded-2xl p-6 md:p-8 flex flex-col gap-5">
               <ContactRow label={t.contact.emailLabel} value={info.email} href={`mailto:${info.email}`} />
               <ContactRow label={t.contact.phoneLabel} value={info.phone} href={`tel:${info.phone}`} />
               {info.address && <ContactRow label={t.contact.addressLabel} value={info.address} />}
@@ -86,11 +91,11 @@ export function ContactSection() {
                 value={info.whatsapp}
                 href={`https://wa.me/${info.whatsapp.replace(/[^\d]/g, "")}`}
               />
-              <SocialIcons className="mt-2" />
+              <SocialIcons className="mt-2 pt-2 border-t border-outline-variant/10" />
             </div>
           )}
           {info?.mapEmbedUrl && (
-            <div className="rounded-xl overflow-hidden glass h-64">
+            <div className="rounded-2xl overflow-hidden glass flex-1 min-h-[240px] md:min-h-[260px] w-full">
               <iframe
                 src={info.mapEmbedUrl}
                 title="Location map"
@@ -108,14 +113,14 @@ export function ContactSection() {
 function ContactRow({ label, value, href }: { label: string; value: string; href?: string }) {
   const content = (
     <>
-      <span className="font-mono-label text-label-sm uppercase text-on-surface-variant block">
+      <span className="font-mono-label text-label-sm uppercase text-on-surface-variant block mb-1">
         {label}
       </span>
-      <span className="text-on-surface">{value}</span>
+      <span className="text-on-surface font-medium">{value}</span>
     </>
   );
   return href ? (
-    <a href={href} className="hover:text-primary transition-colors">
+    <a href={href} className="hover:text-primary transition-colors block">
       {content}
     </a>
   ) : (
