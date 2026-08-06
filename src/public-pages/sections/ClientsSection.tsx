@@ -44,31 +44,45 @@ function InfiniteRow({
   const [trackWidth, setTrackWidth] = useState(0);
 
   useEffect(() => {
-    if (trackRef.current) {
-      setTrackWidth(trackRef.current.scrollWidth / 2);
-    }
+    const el = trackRef.current;
+    if (!el) return;
+
+    const measure = () => {
+      setTrackWidth(el.scrollWidth / 2);
+    };
+
+    measure();
+
+    const ro = new ResizeObserver(() => {
+      measure();
+    });
+
+    ro.observe(el);
+
+    return () => {
+      ro.disconnect();
+    };
   }, [clients]);
 
-  const direction = reverse ? 1 : -1;
-  const duration = trackWidth / speed;
+  const duration = trackWidth > 0 ? trackWidth / speed : 20;
 
   return (
     <div className="relative w-full overflow-hidden py-3">
       <motion.div
         ref={trackRef}
         className="flex w-max gap-8 md:gap-12"
-        animate={{
-          x: [0, direction * trackWidth],
-        }}
+        initial={{ x: reverse ? -trackWidth : 0 }}
+        animate={{ x: reverse ? 0 : -trackWidth }}
         transition={{
           x: {
-            duration: duration || 20,
+            duration,
             repeat: Infinity,
             ease: "linear",
+            repeatType: "loop",
           },
         }}
+        style={{ willChange: "transform" }}
       >
-        {/* نكرر القائمة مرتين لتحقيق الدوران المستمر */}
         {[...clients, ...clients].map((client, i) => (
           <ClientLogo key={`${client.id}-${i}`} client={client} />
         ))}
