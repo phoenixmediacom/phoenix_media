@@ -9,6 +9,26 @@ import { Button } from "../../components/ui/Button";
 import { LoadingState } from "../../components/ui/AsyncStates";
 import { SocialIcons } from "../../components/layout/SocialIcons";
 
+// دالة تحويل رابط جوجل ماب إلى رابط يقبله الـ iframe تلقائياً
+function getEmbedMapUrl(url?: string): string | undefined {
+  if (!url) return undefined;
+
+  // إذا كان الرابط بتنسيق التضمين جاهزاً
+  if (url.includes("/maps/embed") || url.includes("output=embed")) {
+    return url;
+  }
+
+  // إذا تم إدخال رابط عادي أو رابط مكان، نقوم باستخراج اسم المكان أو الإحداثيات
+  const placeMatch = url.match(/\/place\/([^/@]+)/);
+  if (placeMatch && placeMatch[1]) {
+    const placeName = decodeURIComponent(placeMatch[1].replace(/\+/g, " "));
+    return `https://maps.google.com/maps?q=${encodeURIComponent(placeName)}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+  }
+
+  // تحويل أي رابط آخر أو نص عنوان إلى رابط embed شغال
+  return `https://maps.google.com/maps?q=${encodeURIComponent(url)}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+}
+
 export function ContactSection() {
   const { t } = useI18n();
   const { data: info, loading } = useAsync(() => getContactInfo(), []);
@@ -26,6 +46,8 @@ export function ContactSection() {
       setStatus("error");
     }
   }
+
+  const embedUrl = getEmbedMapUrl(info?.mapEmbedUrl);
 
   return (
     <Section id="contact" className="bg-surface-container-lowest">
@@ -89,13 +111,15 @@ export function ContactSection() {
               <SocialIcons className="mt-2" />
             </div>
           )}
-          {info?.mapEmbedUrl && (
-            <div className="rounded-xl overflow-hidden glass h-64">
+          {embedUrl && (
+            <div className="rounded-xl overflow-hidden glass h-64 w-full relative">
               <iframe
-                src={info.mapEmbedUrl}
+                src={embedUrl}
                 title="Location map"
                 className="w-full h-full border-0"
                 loading="lazy"
+                allowFullScreen
+                referrerPolicy="no-referrer-when-downgrade"
               />
             </div>
           )}
