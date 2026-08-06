@@ -9,24 +9,39 @@ import { Button } from "../../components/ui/Button";
 import { LoadingState } from "../../components/ui/AsyncStates";
 import { SocialIcons } from "../../components/layout/SocialIcons";
 
-// دالة تحويل رابط جوجل ماب إلى رابط يقبله الـ iframe تلقائياً
-function getEmbedMapUrl(url?: string): string | undefined {
-  if (!url) return undefined;
+// دالة معالجة رابط الخريطة وتنظيفه تماماً من أي محتوى مخصص يسبب خطأ
+function getEmbedMapUrl(urlOrCoords?: string): string | undefined {
+  if (!urlOrCoords) return undefined;
 
-  // إذا كان الرابط بتنسيق التضمين جاهزاً
-  if (url.includes("/maps/embed") || url.includes("output=embed")) {
-    return url;
+  const trimmed = urlOrCoords.trim();
+
+  // 1. إذا كان المدخل عبارة عن إحداثيات مباشرة (مثل: 21.5433, 39.1728)
+  const coordsRegex = /^[-+]?([1-8]?\d(\.\d+)?|90(\.0+)?),\s*[-+]?(180(\.0+)?|((1[0-7]\d)|([1-9]?\d))(\.\d+)?)$/;
+  if (coordsRegex.test(trimmed)) {
+    return `https://maps.google.com/maps?q=${encodeURIComponent(trimmed)}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
   }
 
-  // إذا تم إدخال رابط عادي أو رابط مكان، نقوم باستخراج اسم المكان أو الإحداثيات
-  const placeMatch = url.match(/\/place\/([^/@]+)/);
+  // 2. إذا كان الرابط هو كود التضمين الأصلي الخاص بـ Embed a map
+  if (trimmed.includes("google.com/maps/embed")) {
+    return trimmed;
+  }
+
+  // 3. استخراج اسم المكان أو العنوان من روابط google.com/maps/place/...
+  const placeMatch = trimmed.match(/\/place\/([^/@]+)/);
   if (placeMatch && placeMatch[1]) {
     const placeName = decodeURIComponent(placeMatch[1].replace(/\+/g, " "));
     return `https://maps.google.com/maps?q=${encodeURIComponent(placeName)}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
   }
 
-  // تحويل أي رابط آخر أو نص عنوان إلى رابط embed شغال
-  return `https://maps.google.com/maps?q=${encodeURIComponent(url)}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+  // 4. استخراج الإحداثيات من أي رابط يحتوي على @lat,lng (مثل @21.5433,39.1728)
+  const atCoordsMatch = trimmed.match(/@([-+]?\d+\.\d+),([-+]?\d+\.\d+)/);
+  if (atCoordsMatch) {
+    const latLng = `${atCoordsMatch[1]},${atCoordsMatch[2]}`;
+    return `https://maps.google.com/maps?q=${latLng}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+  }
+
+  // 5. كحل أخير: استخدام النص كما هو كعنوان بحث في جوجل ماب المضمن
+  return `https://maps.google.com/maps?q=${encodeURIComponent(trimmed)}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
 }
 
 export function ContactSection() {
@@ -112,7 +127,7 @@ export function ContactSection() {
             </div>
           )}
           {embedUrl && (
-            <div className="rounded-xl overflow-hidden glass h-64 w-full relative">
+            <div className="rounded-xl overflow-hidden glass h-80 w-full relative">
               <iframe
                 src={embedUrl}
                 title="Location map"
