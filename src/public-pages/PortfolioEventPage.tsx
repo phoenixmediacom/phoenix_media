@@ -52,27 +52,53 @@ export default function PortfolioEventPage() {
             </Link>
           </div>
 
-          {/* ترويسة الفعالية وشعارات الشركاء والعملاء */}
-          <header className="max-w-content mx-auto px-margin-mobile md:px-margin-desktop pb-12 pt-2">
-            <div className="flex flex-wrap items-center gap-3 mb-6">
-              {event.behindTheScenes && <BehindTheScenesBadge label={t.portfolio.bts} />}
-              
-              {event.companyLogoUrl && (
-                <div className="px-3.5 py-1.5 rounded-xl bg-white/5 backdrop-blur-md border border-white/10 shadow-sm flex items-center">
-                  <img src={event.companyLogoUrl} alt="Company Logo" className="h-6 md:h-7 object-contain" />
-                </div>
-              )}
-              
-              {event.clientLogoUrl && (
-                <div className="px-3.5 py-1.5 rounded-xl bg-white/5 backdrop-blur-md border border-white/10 shadow-sm flex items-center">
-                  <img src={event.clientLogoUrl} alt="Client Logo" className="h-6 md:h-7 object-contain rounded" />
-                </div>
-              )}
-            </div>
-
-            <h1 className="font-display text-display-lg-mobile md:text-display-lg text-on-surface tracking-tight leading-tight max-w-4xl">
+          {/* ترويسة الفعالية وشعارات الشركاء والعملاء في المنتصف */}
+          <header className="max-w-content mx-auto px-margin-mobile md:px-margin-desktop pb-14 pt-4 text-center flex flex-col items-center">
+            
+            {/* شارة كواليس العمل (إن وجدت) في الأعلى */}
+            {event.behindTheScenes && (
+              <div className="mb-6">
+                <BehindTheScenesBadge label={t.portfolio.bts} />
+              </div>
+            )}
+          
+            {/* عنوان الفعالية الرئيسي ممركّز */}
+            <h1 className="font-display text-display-lg-mobile md:text-display-lg text-on-surface tracking-tight leading-tight max-w-4xl mx-auto mb-10">
               {event.title}
             </h1>
+          
+            {/* منصة الشعارات البارزة في منتصف الصفحة */}
+            {(event.companyLogoUrl || event.clientLogoUrl) && (
+              <div className="inline-flex flex-wrap items-center justify-center gap-6 md:gap-10 p-4 md:p-6 rounded-3xl glass bg-white/5 border border-white/15 backdrop-blur-2xl shadow-2xl transition-all hover:border-primary/30">
+                
+                {/* شعار الشركة */}
+                {event.companyLogoUrl && (
+                  <div className="group relative flex items-center justify-center h-16 md:h-24 px-6 md:px-8 py-3 rounded-2xl bg-white/10 border border-white/10 backdrop-blur-md shadow-inner transition-all duration-300 hover:scale-105 hover:bg-white/15">
+                    <img
+                      src={event.companyLogoUrl}
+                      alt="Company Logo"
+                      className="h-full w-auto max-w-[160px] md:max-w-[220px] object-contain filter drop-shadow-md transition-transform duration-300 group-hover:scale-105"
+                    />
+                  </div>
+                )}
+          
+                {/* فاصل بصري أنيق بين الشعارين */}
+                {event.companyLogoUrl && event.clientLogoUrl && (
+                  <div className="hidden sm:block w-px h-10 md:h-14 bg-gradient-to-b from-transparent via-white/20 to-transparent" />
+                )}
+          
+                {/* شعار العميل */}
+                {event.clientLogoUrl && (
+                  <div className="group relative flex items-center justify-center h-16 md:h-24 px-6 md:px-8 py-3 rounded-2xl bg-white/10 border border-white/10 backdrop-blur-md shadow-inner transition-all duration-300 hover:scale-105 hover:bg-white/15">
+                    <img
+                      src={event.clientLogoUrl}
+                      alt="Client Logo"
+                      className="h-full w-auto max-w-[160px] md:max-w-[220px] object-contain filter drop-shadow-md transition-transform duration-300 group-hover:scale-105"
+                    />
+                  </div>
+                )}
+              </div>
+            )}
           </header>
 
           {/* أقسام الفعالية */}
@@ -103,7 +129,6 @@ export default function PortfolioEventPage() {
   );
 }
 
-// مكون الفيديو السينمائي الفاخر
 function CinematicHeroVideo({
   videoUrl,
   posterUrl,
@@ -143,7 +168,6 @@ function CinematicHeroVideo({
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 pointer-events-none" />
 
-      {/* زر التشغيل والإيقاف المركز */}
       {showPlayButton && (
         <button
           onClick={togglePlay}
@@ -185,7 +209,6 @@ function CinematicHeroVideo({
   );
 }
 
-// محرك عرض الأقسام الاحترافي
 function SectionRenderer({
   section,
   onOpenLightbox,
