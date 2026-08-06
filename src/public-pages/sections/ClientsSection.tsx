@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { useI18n } from "../../i18n";
 import { useAsync } from "../../hooks/useAsync";
 import { listClients } from "../../services/endpoints/clients";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 interface Client {
   id: string;
@@ -33,57 +33,45 @@ function useIsMobile(breakpoint = 768) {
 
 function InfiniteRow({
   clients,
-  speed = 40,
+  speed = 30,
   reverse = false,
 }: {
   clients: Client[];
   speed?: number;
   reverse?: boolean;
 }) {
-  const trackRef = useRef<HTMLDivElement>(null);
-  const [trackWidth, setTrackWidth] = useState(0);
+  if (!clients || clients.length === 0) return null;
 
-  useEffect(() => {
-    const el = trackRef.current;
-    if (!el) return;
+  // تكرار المصفوفة حتى نضمن وجود عدد كافٍ من العناصر لتغطية الشاشات العريضة بدون فراغات
+  let baseList = [...clients];
+  while (baseList.length < 12) {
+    baseList = [...baseList, ...clients];
+  }
+  // مضاعفة القائمة لعمل دوران متصل (مجموعتان متطابقتان)
+  const displayClients = [...baseList, ...baseList];
 
-    const measure = () => {
-      setTrackWidth(el.scrollWidth / 2);
-    };
+  // حساب زمن الحركة بناءً على سرعة الصف
+  const duration = baseList.length * (30 / speed) * 4;
 
-    measure();
-
-    const ro = new ResizeObserver(() => {
-      measure();
-    });
-
-    ro.observe(el);
-
-    return () => {
-      ro.disconnect();
-    };
-  }, [clients]);
-
-  const duration = trackWidth > 0 ? trackWidth / speed : 20;
+  // في الحركة العكسية نبدأ من -50% إلى 0% لمنع الانقطاع والقفزات
+  const initialX = reverse ? "-50%" : "0%";
+  const animateX = reverse ? "0%" : "-50%";
 
   return (
-    <div className="relative w-full overflow-hidden py-3">
+    <div className="relative w-full overflow-hidden py-3" dir="ltr">
       <motion.div
-        ref={trackRef}
         className="flex w-max gap-8 md:gap-12"
-        initial={{ x: reverse ? -trackWidth : 0 }}
-        animate={{ x: reverse ? 0 : -trackWidth }}
+        initial={{ x: initialX }}
+        animate={{ x: animateX }}
         transition={{
           x: {
-            duration,
+            duration: duration,
             repeat: Infinity,
             ease: "linear",
-            repeatType: "loop",
           },
         }}
-        style={{ willChange: "transform" }}
       >
-        {[...clients, ...clients].map((client, i) => (
+        {displayClients.map((client, i) => (
           <ClientLogo key={`${client.id}-${i}`} client={client} />
         ))}
       </motion.div>
@@ -130,6 +118,7 @@ export function ClientsSection() {
   const isMobile = useIsMobile();
   const isRTL = locale === "ar";
 
+  // تحديد عدد العناصر لكل صف (4 للهاتف، 8 للشاشات الكبيرة)
   const perRow = isMobile ? 4 : 8;
   const rows = clients ? chunkArray(clients, perRow) : [];
 
@@ -179,15 +168,15 @@ export function ClientsSection() {
               <InfiniteRow
                 key={rowIndex}
                 clients={row}
-                speed={30 + rowIndex * 5}
-                reverse={isRTL ? rowIndex % 2 === 0 : rowIndex % 2 !== 0}
+                speed={25 + rowIndex * 5}
+                reverse={rowIndex % 2 !== 0}
               />
             ))}
           </div>
         )}
       </div>
 
-      {/* Fade edges */}
+      {/* حواف التلاشي (Fade edges) */}
       <div
         className={`absolute inset-y-0 ${isRTL ? "right-0" : "left-0"} w-16 md:w-24 bg-gradient-to-${isRTL ? "l" : "r"} from-surface-container-lowest to-transparent z-20 pointer-events-none`}
       />
