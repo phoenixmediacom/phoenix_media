@@ -7,7 +7,10 @@ export interface VideoSource {
 
 export interface HeroContent {
   companyName: string;
-  tagline: string;
+  tagline: {
+    ar: string;
+    en: string;
+  };
   logoUrl: string;
   video: VideoSource;
 }

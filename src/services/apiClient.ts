@@ -1,79 +1,101 @@
-/**
- * services/apiClient.ts
- *
- * The single entry point every endpoint module goes through. Right now
- * `request()` resolves against the local mock store (see localStore.ts),
- * but its signature and behavior (auth header injection, 401 -> refresh ->
- * retry, standardized ApiError) are exactly what a fetch()-based
- * implementation against a real backend would look like. Swapping mock
- * for real means editing the body of `request()` only — no endpoint
- * module or page needs to change.
- */
-import { ApiError } from "./localStore";
+import axios, { AxiosError, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig  } from 'axios';
 
-const TOKEN_KEY = "phoenix-media:auth:token";
-const REFRESH_KEY = "phoenix-media:auth:refresh";
+// تكوين API
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api';
+
+console.log('API URL:', API_BASE_URL);
+
+// إنشاء Axios instance
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+  },
+  withCredentials: false,
+});
+
+// Token management
+const TOKEN_KEY = 'phoenix_auth_token';
+const USER_KEY = 'phoenix_auth_user';
 
 export function getToken(): string | null {
-  return window.localStorage.getItem(TOKEN_KEY);
+  return localStorage.getItem(TOKEN_KEY);
 }
 
-export function getRefreshToken(): string | null {
-  return window.localStorage.getItem(REFRESH_KEY);
+export function setToken(token: string): void {
+  localStorage.setItem(TOKEN_KEY, token);
 }
 
-export function setTokens(token: string, refreshToken: string): void {
-  window.localStorage.setItem(TOKEN_KEY, token);
-  window.localStorage.setItem(REFRESH_KEY, refreshToken);
+export function removeToken(): void {
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(USER_KEY);
 }
 
-export function clearTokens(): void {
-  window.localStorage.removeItem(TOKEN_KEY);
-  window.localStorage.removeItem(REFRESH_KEY);
+export function getUser(): any | null {
+  const user = localStorage.getItem(USER_KEY);
+  return user ? JSON.parse(user) : null;
+}
+
+export function setUser(user: any): void {
+  localStorage.setItem(USER_KEY, JSON.stringify(user));
 }
 
 export function isAuthenticated(): boolean {
-  return getToken() !== null;
+  return !!getToken();
 }
 
-/**
- * Stub for refresh-token support: a real backend would POST the refresh
- * token to /auth/refresh and receive a new access token. Here we just
- * re-mint one, since there's no server session to actually expire.
- */
-export async function refreshSession(): Promise<boolean> {
-  const refresh = getRefreshToken();
-  if (!refresh) return false;
-  setTokens(`mock-token-${Date.now()}`, refresh);
-  return true;
-}
-
-export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
-
-export interface RequestOptions<TBody = unknown> {
-  method: HttpMethod;
-  /** Executed against the mock store; a real client would use this as the URL path. */
-  run: () => Promise<TBody>;
-  /** Whether this call requires an authenticated session. */
-  requiresAuth?: boolean;
-}
-
-/**
- * Wraps every call with consistent error normalization and an auth guard,
- * mirroring what an axios/fetch interceptor stack would do for a real API.
- */
-export async function request<T>(options: RequestOptions<T>): Promise<T> {
-  if (options.requiresAuth && !isAuthenticated()) {
-    throw new ApiError("Not authenticated", 401);
+// Request interceptor - إضافة Token تلقائياً
+api.interceptors.request.use(
+  (config: InternalAxiosRequestConfig) => {
+    const token = getToken();
+    if (token && config.headers) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error: AxiosError) => {
+    return Promise.reject(error);
   }
+);
 
+// Response interceptor - معالجة الأخطاء
+api.interceptors.response.use(
+  (response: AxiosResponse) => response,
+  (error: AxiosError) => {
+    // إذا كان الخطأ 401 (غير مصرح) - تسجيل خروج تلقائي
+    if (error.response?.status === 401) {
+      removeToken();
+      window.location.href = '/admin/auth/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
+export default api;
+
+// Helper للـ requests
+export async function request<T>(config: AxiosRequestConfig): Promise<T> {
   try {
-    return await options.run();
+    const response = await api.request<T>(config);
+    return response.data;
   } catch (error) {
-    if (error instanceof ApiError) throw error;
-    throw new ApiError(
-      error instanceof Error ? error.message : "Unexpected error",
-      500,
-    );
+    if (axios.isAxiosError(error)) {
+      const message = error.response?.data?.message || error.message;
+      throw new Error(message);
+    }
+    throw error;
+  }
+}
+
+// Error class
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    public statusCode?: number,
+    public errors?: Record<string, string[]>
+  ) {
+    super(message);
+    this.name = 'ApiError';
   }
 }
