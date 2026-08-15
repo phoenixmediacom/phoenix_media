@@ -1,37 +1,73 @@
-import { createLogoCollectionEndpoints } from "./logoCollectionFactory";
+import api from "../apiClient";
+import type { LogoItem } from "../types";
 
-const seedClients = [
-  "TEDx",
-  "MBC Group",
-  "OSN",
-  "Jeddah Intl. Travel & Tourism Exhibition",
-  "Park Hyatt",
-  "Sofitel",
-  "L'azurde",
-  "Lancôme Paris",
-  "Sephora",
-  "Coca-Cola",
-  "Pepsi",
-  "Red Bull",
-  "Nestlé",
-  "Samsung",
-  "Huawei",
-  "LG",
-  "Nokia",
-  "McLaren",
-  "Saudi Tourism Authority",
-  "Jeddah Chamber",
-].map((name, index) => ({
-  id: `client-seed-${index}`,
-  name,
-  logoUrl: `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(name)}&backgroundType=solid&backgroundColor=1c1b1d&textColor=ffb59e`,
-  order: index,
-}));
+// جلب للعملاء في الواجهة العامة (Public)
+export async function getPublicClients(): Promise<LogoItem[]> {
+  const response = await api.get<{ data: any[] }>("/public/clients");
+  return (response.data.data || response.data || []).map((item) => ({
+    id: String(item.id),
+    name: item.name,
+    logoUrl: item.logo || item.logo_url || "",
+    order: item.order ?? 0,
+  }));
+}
 
-const clientsApi = createLogoCollectionEndpoints("clients", seedClients);
+// جلب العملاء في لوحة التحكم (Admin)
+export async function listClients(): Promise<LogoItem[]> {
+  const response = await api.get<{ data: any[] }>("/admin/clients");
+  return (response.data.data || response.data || []).map((item) => ({
+    id: String(item.id),
+    name: item.name,
+    logoUrl: item.logo || item.logo_url || "",
+    order: item.order ?? 0,
+  }));
+}
 
-export const listClients = clientsApi.list;
-export const createClient = clientsApi.create;
-export const updateClient = clientsApi.update;
-export const deleteClient = clientsApi.remove;
-export const reorderClients = clientsApi.reorder;
+export async function createClient(
+  input: Omit<LogoItem, "id" | "order">
+): Promise<LogoItem> {
+  const response = await api.post<{ data: any }>("/admin/clients", {
+    name: input.name,
+    logo_url: input.logoUrl,
+  });
+  const created = response.data.data || response.data;
+  return {
+    id: String(created.id),
+    name: created.name,
+    logoUrl: created.logo || created.logo_url || "",
+    order: created.order ?? 0,
+  };
+}
+
+export async function updateClient(
+  id: string,
+  patch: Partial<LogoItem>
+): Promise<LogoItem> {
+  const payload: Record<string, any> = {};
+  if (patch.name !== undefined) payload.name = patch.name;
+  if (patch.logoUrl !== undefined) payload.logo_url = patch.logoUrl;
+
+  // تم استخدام POST لتنفيذ التحديث بما يتوافق مع Laravel Routes: Route::post('/{client}', ...)
+  const response = await api.post<{ data: any }>(`/admin/clients/${id}`, payload);
+  const updated = response.data.data || response.data;
+  return {
+    id: String(updated.id),
+    name: updated.name,
+    logoUrl: updated.logo || updated.logo_url || "",
+    order: updated.order ?? 0,
+  };
+}
+
+export async function deleteClient(id: string): Promise<void> {
+  await api.delete(`/admin/clients/${id}`);
+}
+
+export async function reorderClients(orderedIds: string[]): Promise<LogoItem[]> {
+  const orders = orderedIds.map((id, index) => ({
+    id: Number(id) || id,
+    order: index + 1,
+  }));
+
+  await api.post("/admin/clients/reorder", { orders });
+  return listClients();
+}

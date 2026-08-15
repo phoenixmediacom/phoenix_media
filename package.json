@@ -10,11 +10,15 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@fortawesome/fontawesome-free": "^7.3.1",
     "axios": "^1.19.0",
     "framer-motion": "^11.11.17",
+    "libphonenumber-js": "^1.13.10",
+    "lucide-react": "^1.31.0",
     "ogl": "^1.0.11",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-phone-number-input": "^3.4.17",
     "react-router-dom": "^6.28.0"
   },
   "devDependencies": {
@@ -23,6 +27,8 @@
     "@testing-library/user-event": "^14.6.1",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "@types/react-phone-number-input": "^3.0.17",
+    "@vercel/node": "^5.10.1",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.20",
     "jsdom": "^30.0.1",

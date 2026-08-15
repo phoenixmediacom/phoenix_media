@@ -1,103 +1,191 @@
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-  type PropsWithChildren,
-} from "react";
-import { en, type Dictionary } from "./en";
+import React, { createContext, useContext, useState, useEffect } from "react";
 import { ar } from "./ar";
-import { getLanguageOverrides } from "../services/endpoints/language";
+import { en, Dictionary } from "./en";
+import { Language } from "../services/types";
 
-export type Locale = "en" | "ar";
-
-const baseDictionaries: Record<Locale, Dictionary> = { en, ar };
-const STORAGE_KEY = "phoenix-media:locale";
-
-function setDeep(target: Record<string, unknown>, path: string, value: string): void {
-  const parts = path.split(".");
-  let cursor = target;
-  for (let i = 0; i < parts.length - 1; i++) {
-    const key = parts[i];
-    if (typeof cursor[key] !== "object" || cursor[key] === null) {
-      cursor[key] = {};
-    }
-    cursor = cursor[key] as Record<string, unknown>;
-  }
-  cursor[parts[parts.length - 1]] = value;
-}
-
-function applyOverrides(dict: Dictionary, overrides: Record<string, string>): Dictionary {
-  const clone = JSON.parse(JSON.stringify(dict)) as Record<string, unknown>;
-  for (const [path, value] of Object.entries(overrides)) {
-    if (value) setDeep(clone, path, value);
-  }
-  return clone as unknown as Dictionary;
-}
-
-interface I18nContextValue {
-  locale: Locale;
-  dir: "ltr" | "rtl";
+export interface LanguageContextType {
+  lang: Language;
+  locale: Language;
   t: Dictionary;
-  setLocale: (locale: Locale) => void;
+  setLanguage: (lang: Language) => void;
+  setLocale: (lang: Language) => void;
+  isLoadingLanguage: boolean;
 }
 
-const I18nContext = createContext<I18nContextValue | null>(null);
+const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
-function detectInitialLocale(): Locale {
-  if (typeof window === "undefined") return "en";
-  const stored = window.localStorage.getItem(STORAGE_KEY);
-  if (stored === "en" || stored === "ar") return stored;
-  return window.navigator.language?.startsWith("ar") ? "ar" : "en";
+/**
+ * ✅ تحويل المسارات المسطحة إلى كائن متداخل
+ * مثال: { "nav.home": "Alaa" } → { nav: { home: "Alaa" } }
+ */
+function unflatten(data: Record<string, string>): any {
+  const result: any = {};
+  
+  Object.keys(data).forEach((key) => {
+    const keys = key.split('.');
+    let current = result;
+    
+    for (let i = 0; i < keys.length; i++) {
+      const k = keys[i];
+      
+      if (i === keys.length - 1) {
+        // ✅ آخر مفتاح: ضع القيمة
+        current[k] = data[key];
+      } else {
+        // ✅ مفتاح وسطي: أنشئ كائن إذا لم يكن موجوداً
+        if (!current[k] || typeof current[k] !== 'object') {
+          current[k] = {};
+        }
+        current = current[k];
+      }
+    }
+  });
+  
+  return result;
 }
 
-export function I18nProvider({ children }: PropsWithChildren) {
-  const [locale, setLocaleState] = useState<Locale>(detectInitialLocale);
-  const [dictionaries, setDictionaries] = useState(baseDictionaries);
-  const dir = locale === "ar" ? "rtl" : "ltr";
+/**
+ * ✅ دمج الترجمات (أولوية للقيم من DB)
+ */
+function deepMerge(target: any, source: any): any {
+  const output = { ...target };
+  
+  Object.keys(source).forEach((key) => {
+    if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
+      output[key] = deepMerge(output[key] || {}, source[key]);
+    } else {
+      // ✅ القيمة من DB لها الأولوية
+      output[key] = source[key];
+    }
+  });
+  
+  return output;
+}
+
+export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [lang, setLang] = useState<Language>("ar");
+  const [isLoadingLanguage, setIsLoadingLanguage] = useState<boolean>(true);
+  const [translations, setTranslations] = useState<{ en: Dictionary; ar: Dictionary }>({
+    en,
+    ar,
+  });
 
   useEffect(() => {
-    document.documentElement.lang = locale;
-    document.documentElement.dir = dir;
-  }, [locale, dir]);
+    const fetchLanguageData = async () => {
+      try {
+        setIsLoadingLanguage(true);
+        const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api';
 
-  // Load admin-managed overrides once on mount and whenever they change
-  // (the admin Language page calls this same reload after saving).
-  useEffect(() => {
-    let cancelled = false;
-    getLanguageOverrides()
-      .then((overrides) => {
-        if (cancelled) return;
-        setDictionaries({
-          en: applyOverrides(en, overrides?.en ?? {}),
-          ar: applyOverrides(ar, overrides?.ar ?? {}),
-        });
-      })
-      .catch(() => {
-        // No overrides available yet — the static dictionaries are a
-        // perfectly valid fallback, so this is not treated as fatal.
-      });
-    return () => {
-      cancelled = true;
+        // ✅ 1. جلب اللغة الافتراضية
+        let defaultLang: Language = "ar";
+        
+        try {
+          const settingsResponse = await fetch(`${API_BASE_URL}/public/settings`, {
+            headers: { "Accept": "application/json" },
+          });
+
+          if (settingsResponse.ok) {
+            const settingsResult = await settingsResponse.json();
+            const settings = settingsResult.data || settingsResult;
+            
+            if (settings.default_language === "ar" || settings.default_language === "en") {
+              defaultLang = settings.default_language;
+            }
+          }
+        } catch (err) {
+          if (import.meta.env.DEV) {
+            console.warn("[i18n] Failed to fetch settings:", err);
+          }
+        }
+
+        // ✅ 2. جلب الترجمات من DB
+        try {
+          const translationsResponse = await fetch(`${API_BASE_URL}/public/translations`, {
+            headers: { "Accept": "application/json" },
+          });
+
+          if (translationsResponse.ok) {
+            const translationsResult = await translationsResponse.json();
+            const items = translationsResult.data || [];
+
+            if (Array.isArray(items) && items.length > 0) {
+              // ✅ بناء overrides مسطحة
+              const flatOverrides: { en: Record<string, string>; ar: Record<string, string> } = {
+                en: {},
+                ar: {},
+              };
+
+              items.forEach((item: any) => {
+                if (item.key && item.value) {
+                  flatOverrides.en[item.key] = item.value.en || "";
+                  flatOverrides.ar[item.key] = item.value.ar || "";
+                }
+              });
+
+              // ✅ تحويل إلى كائنات متداخلة
+              const nestedEn = unflatten(flatOverrides.en);
+              const nestedAr = unflatten(flatOverrides.ar);
+
+              // ✅ دمج مع القيم الافتراضية
+              const mergedEn = deepMerge(en, nestedEn) as Dictionary;
+              const mergedAr = deepMerge(ar, nestedAr) as Dictionary;
+
+              setTranslations({ en: mergedEn, ar: mergedAr });
+
+            }
+          }
+        } catch (err) {
+          if (import.meta.env.DEV) {
+            console.error("[i18n] Failed to fetch translations:", err);
+          }
+        }
+
+        // ✅ 3. تطبيق اللغة
+        setLang(defaultLang);
+        document.dir = defaultLang === "ar" ? "rtl" : "ltr";
+
+      } catch (error) {
+        if (import.meta.env.DEV) {
+          console.error("[i18n] Fatal error:", error);
+        }
+        setLang("ar");
+        document.dir = "rtl";
+      } finally {
+        setIsLoadingLanguage(false);
+      }
     };
+
+    fetchLanguageData();
   }, []);
 
-  const setLocale = (next: Locale) => {
-    setLocaleState(next);
-    window.localStorage.setItem(STORAGE_KEY, next);
+  const setLanguage = (newLang: Language) => {
+    setLang(newLang);
+    document.dir = newLang === "ar" ? "rtl" : "ltr";
   };
 
-  const value = useMemo<I18nContextValue>(
-    () => ({ locale, dir, t: dictionaries[locale], setLocale }),
-    [locale, dir, dictionaries],
+  const t = translations[lang];
+
+  return (
+    <LanguageContext.Provider value={{ 
+      lang, 
+      locale: lang, 
+      t, 
+      setLanguage, 
+      setLocale: setLanguage, 
+      isLoadingLanguage 
+    }}>
+      {children}
+    </LanguageContext.Provider>
   );
+};
 
-  return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
-}
+export const useTranslation = () => {
+  const context = useContext(LanguageContext);
+  if (!context) {
+    throw new Error("useTranslation must be used within a LanguageProvider");
+  }
+  return context;
+};
 
-export function useI18n(): I18nContextValue {
-  const ctx = useContext(I18nContext);
-  if (!ctx) throw new Error("useI18n must be used within I18nProvider");
-  return ctx;
-}
+export const useI18n = useTranslation;
+export const I18nProvider = LanguageProvider;

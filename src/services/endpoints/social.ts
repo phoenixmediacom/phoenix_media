@@ -1,75 +1,75 @@
-import {
-  seed,
-  listCollection,
-  createItem,
-  updateItem,
-  deleteItem,
-  reorderItems,
-  newId,
-} from "../localStore";
 import { request } from "../apiClient";
 import type { SocialLink } from "../types";
 
-const KEY = "social";
+function mapSocialFromApi(item: any): SocialLink {
+  return {
+    id: String(item.id),
+    platform: item.platform,
+    url: item.url,
+    order: item.order ?? 0,
+  };
+}
 
-seed<SocialLink[]>(KEY, [
-  { id: "soc-1", platform: "instagram", url: "https://instagram.com/phoenixmedia", order: 0 },
-  { id: "soc-2", platform: "behance", url: "https://behance.net/phoenixmedia", order: 1 },
-  { id: "soc-3", platform: "vimeo", url: "https://vimeo.com/phoenixmedia", order: 2 },
-  { id: "soc-4", platform: "x", url: "https://x.com/phoenixmedia", order: 3 },
-]);
-
-export async function listSocialLinks(): Promise<SocialLink[]> {
-  return request({
+// 1. الواجهة العامة (Public)
+export async function getPublicSocialLinks(): Promise<SocialLink[]> {
+  const res = await request<any>({
+    url: "/public/social-media",
     method: "GET",
-    run: async () => {
-      const { items } = await listCollection<SocialLink>(KEY);
-      return [...items].sort((a, b) => a.order - b.order);
-    },
   });
+  const data = res.data || res;
+  return Array.isArray(data) ? data.map(mapSocialFromApi) : [];
+}
+
+// 2. لوحة التحكم (Admin)
+export async function listSocialLinks(): Promise<SocialLink[]> {
+  const res = await request<any>({
+    url: "/admin/social-media",
+    method: "GET",
+  });
+  const data = res.data || res;
+  return Array.isArray(data) ? data.map(mapSocialFromApi) : [];
 }
 
 export async function createSocialLink(
   input: Omit<SocialLink, "id" | "order">,
 ): Promise<SocialLink> {
-  return request({
+  const res = await request<any>({
+    url: "/admin/social-media",
     method: "POST",
-    requiresAuth: true,
-    run: async () => {
-      const { items } = await listCollection<SocialLink>(KEY);
-      return createItem<SocialLink>(KEY, { ...input, id: newId(), order: items.length });
-    },
+    data: input,
   });
+  return mapSocialFromApi(res.data || res);
 }
 
+// ✅ تم تغيير PUT إلى POST (حسب Laravel Routes)
 export async function updateSocialLink(
   id: string,
   patch: Partial<SocialLink>,
 ): Promise<SocialLink> {
-  return request({
-    method: "PATCH",
-    requiresAuth: true,
-    run: () => updateItem<SocialLink>(KEY, id, patch),
+  const res = await request<any>({
+    url: `/admin/social-media/${id}`,
+    method: "POST", // ✅ كان PUT
+    data: patch,
   });
+  return mapSocialFromApi(res.data || res);
 }
 
 export async function deleteSocialLink(id: string): Promise<void> {
-  return request({
+  await request({
+    url: `/admin/social-media/${id}`,
     method: "DELETE",
-    requiresAuth: true,
-    run: () => deleteItem<SocialLink>(KEY, id),
   });
 }
 
-export async function reorderSocialLinks(orderedIds: string[]): Promise<SocialLink[]> {
-  return request({
-    method: "PATCH",
-    requiresAuth: true,
-    run: async () => {
-      const reordered = await reorderItems<SocialLink>(KEY, orderedIds);
-      return Promise.all(
-        reordered.map((item, index) => updateItem<SocialLink>(KEY, item.id, { order: index })),
-      );
-    },
+export async function reorderSocialLinks(orderedIds: string[]): Promise<void> {
+  const orders = orderedIds.map((id, index) => ({
+    id: Number(id) || id,
+    order: index,
+  }));
+
+  await request({
+    url: "/admin/social-media/reorder",
+    method: "POST",
+    data: { orders },
   });
 }

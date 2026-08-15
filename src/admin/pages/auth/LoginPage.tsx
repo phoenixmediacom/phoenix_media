@@ -120,15 +120,6 @@ export default function LoginPage() {
             t.admin.signIn
           )}
         </Button>
-
-        {/* Demo Info */}
-        {import.meta.env.DEV && (
-          <div className="p-3 rounded-lg bg-primary/5 border border-primary/10">
-            <p className="text-xs text-on-surface-variant text-center">
-              <strong>Demo:</strong> admin@phoenixmedia.com / Phoenix@2024
-            </p>
-          </div>
-        )}
       </form>
     </AuthLayout>
   );

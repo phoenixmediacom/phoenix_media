@@ -9,7 +9,7 @@ import { SocialIcons } from "../../components/layout/SocialIcons";
 import { LoadingState, ErrorState } from "../../components/ui/AsyncStates";
 
 export function HeroSection() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { data: hero, loading, error, refetch } = useAsync(() => getHero(), []);
   const [muted, setMuted] = useState(true);
   const progress = useHeroProgress();
@@ -37,13 +37,13 @@ export function HeroSection() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1, ease: "easeOut" }}
-              className="h-20 md:h-28 w-auto mx-auto mb-6 object-contain"
+              className="h-20 md:h-28 w-auto mx-auto mb-6 object-contain drop-shadow-2xl"
             />
             <motion.h1
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1, delay: 0.15, ease: "easeOut" }}
-              className="font-display text-display-lg-mobile md:text-display-lg text-on-surface"
+              className="font-display text-display-lg-mobile md:text-display-lg text-white drop-shadow-lg"
             >
               {hero.companyName}
             </motion.h1>
@@ -51,9 +51,9 @@ export function HeroSection() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1, delay: 0.3, ease: "easeOut" }}
-              className="font-mono-label uppercase text-label-sm text-primary mt-4 tracking-widest"
+              className="font-mono-label uppercase text-label-sm text-primary mt-4 tracking-widest drop-shadow-md"
             >
-              {hero.tagline || t.hero.tagline}
+              {hero.tagline?.[locale] || t.hero.tagline}
             </motion.p>
             <motion.div
               initial={{ opacity: 0 }}
@@ -68,7 +68,7 @@ export function HeroSection() {
       </div>
 
       <motion.div
-        className="absolute bottom-10 left-1/2 -translate-x-1/2 z-10 text-on-surface-variant"
+        className="absolute bottom-10 left-1/2 -translate-x-1/2 z-10 text-white/70"
         animate={{ y: [0, 8, 0] }}
         transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
         style={{ opacity: 1 - progress * 2 }}

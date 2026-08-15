@@ -9,11 +9,10 @@ import { ServicesSection } from "./sections/ServicesSection";
 import { PortfolioSection } from "./sections/PortfolioSection";
 import { ContactSection } from "./sections/ContactSection";
 import { BrandCorner } from "./sections/BrandCorner";
-import { CinematicLoadingEngine } from "../loader/engine/CinematicLoadingEngine";
-import { EngineErrorBoundary } from "../loader/engine/EngineErrorBoundary";
-import { phoenixTheme } from "../loader/themes/phoenix/phoenix.theme";
+import { SimplePhoenixLoader } from "../components/SimplePhoenixLoader";
 import { useAsync } from "../hooks/useAsync";
 import { getHero } from "../services/endpoints/hero";
+import { SeoHead } from "../components/layout/SeoHead";
 
 export default function HomePage() {
   const { loading: heroLoading } = useAsync(() => getHero(), []);
@@ -21,17 +20,21 @@ export default function HomePage() {
 
   return (
     <>
+      <SeoHead />
+
+      {/* ✅ Loader الجديد البسيط */}
       {!showContent && (
-        <EngineErrorBoundary onError={() => setShowContent(true)}>
-          <CinematicLoadingEngine
-            theme={phoenixTheme}
-            isLoading={heroLoading}
-            onExitComplete={() => setShowContent(true)}
-          />
-        </EngineErrorBoundary>
+        <SimplePhoenixLoader
+          isLoading={heroLoading}
+          onComplete={() => setShowContent(true)}
+        />
       )}
 
-      <div style={{ opacity: showContent ? 1 : 0, transition: "opacity 0.4s ease" }}>
+      {/* المحتوى */}
+      <div style={{ 
+        opacity: showContent ? 1 : 0, 
+        transition: "opacity 0.5s ease" 
+      }}>
         <HeroProgressProvider>
           <Nav />
           <BrandCorner />

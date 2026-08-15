@@ -23,7 +23,7 @@ export default function AuthLayout({ children, title, subtitle }: AuthLayoutProp
         transition={{ duration: 1 }}
         className="absolute inset-0 flex items-center justify-center pointer-events-none"
       >
-        <img src="/phoenix-logo.svg" alt="" className="w-96 h-96" />
+        <img src="/logo.png" alt="" className="w-96 h-96" />
       </motion.div>
 
       {/* المحتوى */}
@@ -36,7 +36,7 @@ export default function AuthLayout({ children, title, subtitle }: AuthLayoutProp
         {/* الهيدر */}
         <div className="flex items-center gap-3 mb-8">
           <motion.img
-            src="/phoenix-logo.svg"
+            src="/logo.png"
             alt="Phoenix Media"
             className="h-12 w-12"
             whileHover={{ rotate: 360 }}

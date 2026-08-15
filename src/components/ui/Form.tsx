@@ -3,15 +3,18 @@ import { forwardRef, type InputHTMLAttributes, type SelectHTMLAttributes, type T
 const fieldBase =
   "w-full rounded-lg bg-surface-container-low border border-glass-border px-4 py-3 text-on-surface placeholder:text-on-surface-variant/50 outline-none transition-colors focus:border-primary focus:shadow-bloom-sm";
 
+// ✅ إضافة error prop فقط
 export function Field({
   label,
   htmlFor,
   hint,
+  error, // ✅ إضافة
   children,
 }: {
   label: string;
   htmlFor: string;
   hint?: string;
+  error?: string; // ✅ إضافة
   children: React.ReactNode;
 }) {
   return (
@@ -20,7 +23,17 @@ export function Field({
         {label}
       </label>
       {children}
-      {hint && <span className="text-xs text-on-surface-variant/70">{hint}</span>}
+      {/* ✅ عرض hint فقط إذا لم يكن هناك error */}
+      {hint && !error && <span className="text-xs text-on-surface-variant/70">{hint}</span>}
+      {/* ✅ عرض error إذا كان موجوداً */}
+      {error && (
+        <p className="text-xs text-error flex items-center gap-1">
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          {error}
+        </p>
+      )}
     </div>
   );
 }

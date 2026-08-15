@@ -1,8 +1,9 @@
 import { motion } from "framer-motion";
 import { useI18n } from "../../i18n";
 import { useAsync } from "../../hooks/useAsync";
-import { listClients } from "../../services/endpoints/clients";
+import { getPublicClients } from "../../services/endpoints/clients";
 import { useEffect, useState } from "react";
+import { useTheme } from "../../contexts/ThemeContext"; // ✅ إضافة
 
 interface Client {
   id: string;
@@ -42,18 +43,14 @@ function InfiniteRow({
 }) {
   if (!clients || clients.length === 0) return null;
 
-  // تكرار المصفوفة حتى نضمن وجود عدد كافٍ من العناصر لتغطية الشاشات العريضة بدون فراغات
   let baseList = [...clients];
   while (baseList.length < 12) {
     baseList = [...baseList, ...clients];
   }
-  // مضاعفة القائمة لعمل دوران متصل (مجموعتان متطابقتان)
   const displayClients = [...baseList, ...baseList];
 
-  // حساب زمن الحركة بناءً على سرعة الصف
   const duration = baseList.length * (30 / speed) * 4;
 
-  // في الحركة العكسية نبدأ من -50% إلى 0% لمنع الانقطاع والقفزات
   const initialX = reverse ? "-50%" : "0%";
   const animateX = reverse ? "0%" : "-50%";
 
@@ -80,27 +77,45 @@ function InfiniteRow({
 }
 
 function ClientLogo({ client }: { client: Client }) {
+  const { theme } = useTheme(); // ✅ إضافة
   const [imgError, setImgError] = useState(false);
   const hasImage = client.logoUrl && !imgError;
 
   return (
-    <div className="flex-shrink-0 flex items-center justify-center w-[72px] h-[72px] md:w-[100px] md:h-[100px] rounded-xl bg-surface-container/50 border border-outline-variant/10 backdrop-blur-sm transition-transform duration-300 hover:scale-110">
+    <div 
+      className="flex-shrink-0 flex items-center justify-center w-[100px] h-[100px] md:w-[140px] md:h-[140px] transition-all duration-300 hover:scale-110 group"
+      title={client.name}
+    >
       {hasImage ? (
-        <img
-          src={client.logoUrl}
-          alt={client.name}
-          title={client.name}
-          onError={() => setImgError(true)}
-          className="w-12 h-12 md:w-16 md:h-16 object-contain filter brightness-90 hover:brightness-110 transition-all duration-300"
-          loading="lazy"
-        />
+        <div className="relative w-full h-full flex items-center justify-center p-3 md:p-4">
+          {/* ✅ الشعار */}
+          <img
+            src={client.logoUrl}
+            alt={client.name}
+            onError={() => setImgError(true)}
+            className="max-w-full max-h-full object-contain transition-all duration-300 group-hover:scale-110"
+            style={{
+              filter: theme === "dark" 
+                ? "invert(1) hue-rotate(180deg) brightness(1.1) contrast(0.9)" 
+                : "brightness(1) contrast(1)",
+              mixBlendMode: theme === "dark" ? "screen" : "multiply",
+              opacity: theme === "dark" ? 0.9 : 0.85,
+            }}
+            loading="lazy"
+          />
+          
+          {/* ✅ Glow على hover */}
+          <div className="absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-br from-primary/10 to-transparent -z-10" />
+        </div>
       ) : (
-        <span
-          className="text-on-surface-variant text-xs md:text-sm font-mono-label text-center leading-tight px-2 truncate max-w-full"
-          title={client.name}
-        >
-          {client.name}
-        </span>
+        <div className="glass rounded-lg px-4 py-2 min-w-[80px] min-h-[60px] flex items-center justify-center">
+          <span
+            className="text-on-surface-variant text-xs md:text-sm font-mono-label text-center leading-tight truncate"
+            title={client.name}
+          >
+            {client.name}
+          </span>
+        </div>
       )}
     </div>
   );
@@ -113,12 +128,11 @@ export function ClientsSection() {
     loading,
     error,
     refetch,
-  } = useAsync(() => listClients(), []);
+  } = useAsync(() => getPublicClients(), []);
 
   const isMobile = useIsMobile();
   const isRTL = locale === "ar";
 
-  // تحديد عدد العناصر لكل صف (4 للهاتف، 8 للشاشات الكبيرة)
   const perRow = isMobile ? 4 : 8;
   const rows = clients ? chunkArray(clients, perRow) : [];
 
@@ -176,7 +190,7 @@ export function ClientsSection() {
         )}
       </div>
 
-      {/* حواف التلاشي (Fade edges) */}
+      {/* Fade edges */}
       <div
         className={`absolute inset-y-0 ${isRTL ? "right-0" : "left-0"} w-16 md:w-24 bg-gradient-to-${isRTL ? "l" : "r"} from-surface-container-lowest to-transparent z-20 pointer-events-none`}
       />

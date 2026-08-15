@@ -1,10 +1,10 @@
 import { motion } from "framer-motion";
 import { useAsync } from "../../hooks/useAsync";
-import { listSocialLinks } from "../../services/endpoints/social";
+import { getPublicSocialLinks } from "../../services/endpoints/social"; // ✅ تغيير الاستيراد
 import { SocialIcon } from "./SocialIcon";
 
 export function SocialIcons({ className = "" }: { className?: string }) {
-  const { data } = useAsync(() => listSocialLinks(), []);
+  const { data } = useAsync(() => getPublicSocialLinks(), []); // ✅ استخدام Public API
 
   if (!data || data.length === 0) return null;
 

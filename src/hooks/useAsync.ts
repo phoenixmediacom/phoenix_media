@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ApiError } from "../services/localStore";
 
 export interface AsyncState<T> {
   data: T | null;
@@ -34,7 +33,14 @@ export function useAsync<T>(fetcher: () => Promise<T>, deps: unknown[] = []): As
       })
       .catch((err: unknown) => {
         if (cancelled) return;
-        setError(err instanceof ApiError ? err.message : "Something went wrong.");
+        // ✅ تم تحديث معالجة الخطأ لتكون أكثر مرونة
+        if (err instanceof Error) {
+          setError(err.message);
+        } else if (typeof err === 'string') {
+          setError(err);
+        } else {
+          setError("Something went wrong.");
+        }
       })
       .finally(() => {
         if (!cancelled) setLoading(false);

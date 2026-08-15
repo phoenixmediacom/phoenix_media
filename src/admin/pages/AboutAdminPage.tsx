@@ -17,16 +17,27 @@ export default function AboutAdminPage() {
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-    if (data) setForm(data);
+    if (data) {
+      // نأخذ البيانات المصممة الجاهزة من getAbout() مباشرة دون إعادة تحويل خادعة
+      setForm(data);
+    }
   }, [data]);
 
   async function onSave() {
     if (!form) return;
     setSaving(true);
-    await updateAbout(form);
-    setSaving(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+
+    try {
+      const updatedData = await updateAbout(form);
+      setForm(updatedData);
+
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (error) {
+      console.error("Failed to save about section:", error);
+    } finally {
+      setSaving(false);
+    }
   }
 
   if (loading || !form) return <LoadingState />;
@@ -59,7 +70,7 @@ export default function AboutAdminPage() {
           <Input
             id="about-title"
             dir={editingLang === "ar" ? "rtl" : "ltr"}
-            value={form.title[editingLang]}
+            value={form.title?.[editingLang] ?? ""}
             onChange={(e) =>
               setForm({ ...form, title: { ...form.title, [editingLang]: e.target.value } })
             }
@@ -71,7 +82,7 @@ export default function AboutAdminPage() {
             id="about-description"
             dir={editingLang === "ar" ? "rtl" : "ltr"}
             rows={6}
-            value={form.description[editingLang]}
+            value={form.description?.[editingLang] ?? ""}
             onChange={(e) =>
               setForm({
                 ...form,

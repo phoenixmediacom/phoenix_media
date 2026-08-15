@@ -1,4 +1,5 @@
-import type { PortfolioSection, FeaturedPerson } from "../../services/types";
+import { useState } from "react";
+import type { PortfolioSection, FeaturedPerson, LocalizedText } from "../../services/types";
 import { Field, Input, Select, Textarea, Checkbox } from "../../components/ui/Form";
 import { MediaUploader } from "../../components/ui/MediaUploader";
 import { Button } from "../../components/ui/Button";
@@ -15,6 +16,8 @@ export function PortfolioSectionEditor({
   section: PortfolioSection;
   onChange: (section: PortfolioSection) => void;
 }) {
+  const [lang, setLang] = useState<"ar" | "en">("ar");
+
   if (section.type === "hero-video") {
     return (
       <div className="flex flex-col gap-4">
@@ -65,20 +68,71 @@ export function PortfolioSectionEditor({
   }
 
   if (section.type === "text") {
+    const textSection = section as Extract<PortfolioSection, { type: "text" }>;
+
+    const headingObj: LocalizedText =
+      typeof textSection.heading === "object" && textSection.heading !== null
+        ? textSection.heading
+        : { ar: (textSection.heading as unknown as string) || "", en: "" };
+
+    const bodyObj: LocalizedText =
+      typeof textSection.body === "object" && textSection.body !== null
+        ? textSection.body
+        : { ar: (textSection.body as unknown as string) || "", en: "" };
+
     return (
       <div className="flex flex-col gap-4">
-        <Field label="Heading" htmlFor={`heading-${section.id}`}>
+        <div className="flex gap-2 mb-2">
+          <Button
+            type="button"
+            variant={lang === "ar" ? "primary" : "secondary"}
+            size="sm"
+            onClick={() => setLang("ar")}
+          >
+            العربية
+          </Button>
+          <Button
+            type="button"
+            variant={lang === "en" ? "primary" : "secondary"}
+            size="sm"
+            onClick={() => setLang("en")}
+          >
+            English
+          </Button>
+        </div>
+
+        <Field label={`Heading (${lang.toUpperCase()})`} htmlFor={`heading-${textSection.id}`}>
           <Input
-            id={`heading-${section.id}`}
-            value={section.heading}
-            onChange={(e) => onChange({ ...section, heading: e.target.value })}
+            id={`heading-${textSection.id}`}
+            dir={lang === "ar" ? "rtl" : "ltr"}
+            value={headingObj[lang] || ""}
+            onChange={(e) =>
+              onChange({
+                ...textSection,
+                heading: {
+                  ...headingObj,
+                  [lang]: e.target.value,
+                },
+              })
+            }
           />
         </Field>
-        <Field label="Body" htmlFor={`body-${section.id}`}>
+
+        <Field label={`Body (${lang.toUpperCase()})`} htmlFor={`body-${textSection.id}`}>
           <Textarea
-            id={`body-${section.id}`}
-            value={section.body}
-            onChange={(e) => onChange({ ...section, body: e.target.value })}
+            id={`body-${textSection.id}`}
+            dir={lang === "ar" ? "rtl" : "ltr"}
+            rows={4}
+            value={bodyObj[lang] || ""}
+            onChange={(e) =>
+              onChange({
+                ...textSection,
+                body: {
+                  ...bodyObj,
+                  [lang]: e.target.value,
+                },
+              })
+            }
           />
         </Field>
       </div>
@@ -87,15 +141,18 @@ export function PortfolioSectionEditor({
 
   if (section.type === "people") {
     const peopleSection = section as Extract<PortfolioSection, { type: "people" }>;
+  
     function updatePerson(id: string, patch: Partial<FeaturedPerson>) {
       onChange({
         ...peopleSection,
         people: peopleSection.people.map((p) => (p.id === id ? { ...p, ...patch } : p)),
       });
     }
+  
     function removePerson(id: string) {
       onChange({ ...peopleSection, people: peopleSection.people.filter((p) => p.id !== id) });
     }
+  
     function addPerson() {
       onChange({
         ...peopleSection,
@@ -105,7 +162,7 @@ export function PortfolioSectionEditor({
         ],
       });
     }
-
+  
     return (
       <div className="flex flex-col gap-6">
         <Field label="Hero background image" htmlFor={`people-hero-${peopleSection.id}`}>
@@ -114,7 +171,7 @@ export function PortfolioSectionEditor({
             onChange={(url) => onChange({ ...peopleSection, heroImageUrl: url })}
           />
         </Field>
-
+  
         <div className="flex flex-col gap-4">
           <span className="text-sm font-medium text-on-surface-variant">Featured people</span>
           {peopleSection.people.map((person) => (
@@ -138,7 +195,7 @@ export function PortfolioSectionEditor({
                   Gallery opened when this person is clicked
                 </span>
                 <GalleryItemsEditor
-                  items={person.gallery}
+                  items={person.gallery || []}
                   onChange={(gallery) => updatePerson(person.id, { gallery })}
                 />
               </div>

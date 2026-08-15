@@ -15,6 +15,8 @@ export interface HeroContent {
   video: VideoSource;
 }
 
+export type Language = 'ar' | 'en';
+
 export interface LocalizedText {
   en: string;
   ar: string;
@@ -91,18 +93,18 @@ export type PortfolioSection =
       id: string;
       type: "text";
       order: number;
-      heading: string;
-      body: string;
+      heading: LocalizedText;
+      body: LocalizedText;
     };
 
 export interface PortfolioEvent {
   id: string;
-  title: string;
+  title: LocalizedText;
   slug: string;
-  coverImageUrl: string;
-  companyLogoUrl?: string;
-  clientLogoUrl?: string;
-  behindTheScenes: boolean;
+  cover_image_url: string;
+  company_logo_url?: string;
+  client_logo_url?: string;
+  behind_the_scenes: boolean;
   published: boolean;
   order: number;
   sections: PortfolioSection[];
@@ -116,12 +118,28 @@ export interface ContactInfo {
   mapEmbedUrl?: string;
 }
 
+// ✅ Contact Submission Types
 export interface ContactSubmission {
   id: string;
   name: string;
   email: string;
+  phone?: string;
   message: string;
+  status: 'new' | 'read' | 'replied' | 'archived';
+  ipAddress?: string;
   createdAt: string;
+  readAt?: string | null;
+}
+
+export interface SubmissionsStats {
+  total: number;
+  new: number;
+  read: number;
+  replied: number;
+  archived: number;
+  today?: number;
+  this_week?: number;
+  this_month?: number;
 }
 
 export type SocialPlatform =
@@ -154,12 +172,16 @@ export interface NavItem {
 export interface SeoSettings {
   pageTitle: string;
   metaDescription: string;
-  ogImageUrl?: string;
+  keywords: string[];
+  ogImageUrl: string;
+  ogImageType?: "upload" | "url";
 }
 
 export interface GeneralSettings {
   siteName: string;
-  defaultLocale: "en" | "ar";
+  defaultLocale: 'en' | 'ar';
+  browserTabTitle: string;
+  favicon: string;
   maintenanceMode: boolean;
 }
 

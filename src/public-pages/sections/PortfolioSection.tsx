@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { useI18n } from "../../i18n";
 import { useAsync } from "../../hooks/useAsync";
-import { listPortfolio } from "../../services/endpoints/portfolio";
+import { getPublicPortfolio } from "../../services/endpoints/portfolio";
 import { Section } from "../../components/layout/Section";
 import { BehindTheScenesBadge } from "../../components/ui/Card";
 import { LoadingState, ErrorState } from "../../components/ui/AsyncStates";
@@ -17,7 +17,8 @@ function EventTile({
   featured?: boolean;
   index: number;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 40 }}
@@ -35,14 +36,14 @@ function EventTile({
         }`}
       >
         <img
-          src={event.coverImageUrl}
-          alt={event.title}
+          src={event.cover_image_url} // 👈 استخدام cover_image_url
+          alt={event.title[locale]}  // 👈 استخراج النص حسب اللغة الحالية
           className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
           loading="lazy"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-500" />
 
-        {event.behindTheScenes && (
+        {event.behind_the_scenes && ( // 👈 استخدام behind_the_scenes
           <div className="absolute top-4 start-4 z-10">
             <BehindTheScenesBadge label={t.portfolio.bts} />
           </div>
@@ -60,7 +61,7 @@ function EventTile({
               featured ? "text-2xl md:text-3xl lg:text-4xl" : "text-lg md:text-xl"
             }`}
           >
-            {event.title}
+            {event.title[locale]} {/* 👈 استخراج العنوان حسب اللغة الحالية */}
           </h3>
           <span className="font-mono-label text-label-sm text-primary uppercase mt-3 inline-flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-1 group-hover:translate-y-0">
             {t.portfolio.viewProject}
@@ -74,7 +75,7 @@ function EventTile({
 
 export function PortfolioSection() {
   const { t } = useI18n();
-  const { data: events, loading, error, refetch } = useAsync(() => listPortfolio(true), []);
+  const { data: events, loading, error, refetch } = useAsync(() => getPublicPortfolio(), []);
 
   return (
     <Section id="portfolio" className="bg-surface">

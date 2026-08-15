@@ -3,7 +3,6 @@ import axios, { AxiosError, AxiosRequestConfig, AxiosResponse, InternalAxiosRequ
 // تكوين API
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api';
 
-console.log('API URL:', API_BASE_URL);
 
 // إنشاء Axios instance
 const api = axios.create({
@@ -12,7 +11,7 @@ const api = axios.create({
     'Content-Type': 'application/json',
     'Accept': 'application/json',
   },
-  withCredentials: false,
+  withCredentials: true,
 });
 
 // Token management
@@ -63,10 +62,15 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response: AxiosResponse) => response,
   (error: AxiosError) => {
-    // إذا كان الخطأ 401 (غير مصرح) - تسجيل خروج تلقائي
+    // إذا كان الخطأ 401 (غير مصرح)
     if (error.response?.status === 401) {
       removeToken();
-      window.location.href = '/admin/auth/login';
+      
+      // لا نقم بالتحويل القسري لصفحة اللوجن إلا إذا كان المستخدم داخل مسار لوحة التحكم (/admin)
+      const currentPath = window.location.pathname;
+      if (currentPath.startsWith('/admin') && !currentPath.startsWith('/admin/auth')) {
+        window.location.href = '/admin/auth/login';
+      }
     }
     return Promise.reject(error);
   }

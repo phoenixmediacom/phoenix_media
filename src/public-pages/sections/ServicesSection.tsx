@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { useI18n } from "../../i18n";
 import { useAsync } from "../../hooks/useAsync";
-import { listServices } from "../../services/endpoints/services";
+import { getPublicServices } from "../../services/endpoints/services";
 import { Section } from "../../components/layout/Section";
 import { Card } from "../../components/ui/Card";
 import { LoadingState, ErrorState } from "../../components/ui/AsyncStates";
@@ -25,7 +25,7 @@ function ServiceIconView({ icon }: { icon: ServiceIcon }) {
 
 export function ServicesSection() {
   const { t, locale } = useI18n();
-  const { data: services, loading, error, refetch } = useAsync(() => listServices(), []);
+  const { data: services, loading, error, refetch } = useAsync(() => getPublicServices(), []);
 
   return (
     <Section id="services" className="bg-surface-container-lowest">

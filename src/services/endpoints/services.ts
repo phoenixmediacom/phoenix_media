@@ -1,111 +1,121 @@
-import {
-  seed,
-  listCollection,
-  createItem,
-  updateItem,
-  deleteItem,
-  reorderItems,
-  newId,
-} from "../localStore";
 import { request } from "../apiClient";
-import type { ServiceItem } from "../types";
+import type { ServiceItem, ServiceIcon } from "../types";
 
-const KEY = "services";
+function mapServiceFromApi(item: any): ServiceItem {
+  return {
+    id: String(item.id),
+    icon: {
+      type: item.icon_type as ServiceIcon["type"],
+      value: item.icon_value || "",
+    } as ServiceIcon,
+    title: {
+      en: item.title?.en || "",
+      ar: item.title?.ar || "",
+    },
+    description: {
+      en: item.description?.en || "",
+      ar: item.description?.ar || "",
+    },
+    order: item.order ?? 0,
+  };
+}
 
-seed<ServiceItem[]>(KEY, [
-  {
-    id: "svc-1",
-    icon: { type: "fontawesome", value: "fa-solid fa-clapperboard" },
-    title: { en: "Commercial Production", ar: "الإنتاج الإعلاني" },
-    description: {
-      en: "End-to-end production for brand films, TVCs, and digital campaigns.",
-      ar: "إنتاج متكامل لأفلام العلامات التجارية والإعلانات التلفزيونية والحملات الرقمية.",
-    },
-    order: 0,
-  },
-  {
-    id: "svc-2",
-    icon: { type: "fontawesome", value: "fa-solid fa-microphone-lines" },
-    title: { en: "Live Event Coverage", ar: "تغطية الفعاليات الحية" },
-    description: {
-      en: "Multi-camera coverage for concerts, ceremonies, and large-scale festivals.",
-      ar: "تغطية متعددة الكاميرات للحفلات والمناسبات والمهرجانات الكبرى.",
-    },
-    order: 1,
-  },
-  {
-    id: "svc-3",
-    icon: { type: "fontawesome", value: "fa-solid fa-film" },
-    title: { en: "Post-Production & Editing", ar: "المونتاج وما بعد الإنتاج" },
-    description: {
-      en: "Color grading, sound design, and edit finishing for cinema-grade delivery.",
-      ar: "تصحيح الألوان وتصميم الصوت والمونتاج النهائي بجودة سينمائية.",
-    },
-    order: 2,
-  },
-  {
-    id: "svc-4",
-    icon: { type: "fontawesome", value: "fa-solid fa-video" },
-    title: { en: "Documentary Filmmaking", ar: "الأفلام الوثائقية" },
-    description: {
-      en: "Long-form storytelling from research through festival-ready final cut.",
-      ar: "سرد قصصي طويل من مرحلة البحث حتى النسخة النهائية الجاهزة للمهرجانات.",
-    },
-    order: 3,
-  },
-]);
+// 1. الواجهة العامة (Public)
+export async function getPublicServices(): Promise<ServiceItem[]> {
+  return request({
+    url: "/public/services",
+    method: "GET",
+  }).then((res: any) => {
+    const list = res?.data || res || [];
+    return list.map(mapServiceFromApi).sort((a: ServiceItem, b: ServiceItem) => a.order - b.order);
+  });
+}
 
+// 2. لوحة التحكم (Admin)
 export async function listServices(): Promise<ServiceItem[]> {
   return request({
+    url: "/admin/services",
     method: "GET",
-    run: async () => {
-      const { items } = await listCollection<ServiceItem>(KEY);
-      return [...items].sort((a, b) => a.order - b.order);
-    },
+  }).then((res: any) => {
+    const list = res?.data || res || [];
+    return list.map(mapServiceFromApi).sort((a: ServiceItem, b: ServiceItem) => a.order - b.order);
   });
 }
 
 export async function createService(
-  input: Omit<ServiceItem, "id" | "order">,
+  input: Omit<ServiceItem, "id" | "order"> & { iconFile?: File | null }
 ): Promise<ServiceItem> {
+  const formData = new FormData();
+  formData.append("icon_type", input.icon.type);
+  formData.append("icon_value", input.icon.value || "");
+  formData.append("title[en]", input.title.en);
+  formData.append("title[ar]", input.title.ar);
+  formData.append("description[en]", input.description.en);
+  formData.append("description[ar]", input.description.ar);
+
+  if (input.icon.type === "image" && input.iconFile) {
+    formData.append("icon_file", input.iconFile);
+  }
+
   return request({
+    url: "/admin/services",
     method: "POST",
-    requiresAuth: true,
-    run: async () => {
-      const { items } = await listCollection<ServiceItem>(KEY);
-      return createItem<ServiceItem>(KEY, { ...input, id: newId(), order: items.length });
+    data: formData,
+    headers: {
+      "Content-Type": "multipart/form-data",
     },
-  });
+  }).then((res: any) => mapServiceFromApi(res.data || res));
 }
 
+// ✅ تحسين: استخدام _method=PUT لدعم multipart في Laravel
 export async function updateService(
   id: string,
-  patch: Partial<ServiceItem>,
+  input: Partial<Omit<ServiceItem, "id">> & { iconFile?: File | null }
 ): Promise<ServiceItem> {
+  const formData = new FormData();
+  formData.append("_method", "PUT");
+
+  if (input.icon) {
+    formData.append("icon_type", input.icon.type);
+    formData.append("icon_value", input.icon.value || "");
+  }
+  if (input.title) {
+    formData.append("title[en]", input.title.en);
+    formData.append("title[ar]", input.title.ar);
+  }
+  if (input.description) {
+    formData.append("description[en]", input.description.en);
+    formData.append("description[ar]", input.description.ar);
+  }
+  if (input.icon?.type === "image" && input.iconFile) {
+    formData.append("icon_file", input.iconFile);
+  }
+
   return request({
-    method: "PATCH",
-    requiresAuth: true,
-    run: () => updateItem<ServiceItem>(KEY, id, patch),
-  });
+    url: `/admin/services/${id}`,
+    method: "POST", // ✅ نستخدم POST مع _method=PUT
+    data: formData,
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  }).then((res: any) => mapServiceFromApi(res.data || res));
 }
 
 export async function deleteService(id: string): Promise<void> {
   return request({
+    url: `/admin/services/${id}`,
     method: "DELETE",
-    requiresAuth: true,
-    run: () => deleteItem<ServiceItem>(KEY, id),
   });
 }
 
-export async function reorderServices(orderedIds: string[]): Promise<ServiceItem[]> {
+export async function reorderServices(orderedIds: string[]): Promise<void> {
+  const payload = {
+    orders: orderedIds.map((id, index) => ({ id, order: index })),
+  };
+
   return request({
-    method: "PATCH",
-    requiresAuth: true,
-    run: async () => {
-      const reordered = await reorderItems<ServiceItem>(KEY, orderedIds);
-      return Promise.all(
-        reordered.map((item, index) => updateItem<ServiceItem>(KEY, item.id, { order: index })),
-      );
-    },
+    url: "/admin/services/reorder",
+    method: "POST",
+    data: payload,
   });
 }

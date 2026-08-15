@@ -1,4 +1,6 @@
 import { createBrowserRouter, RouterProvider, Outlet, type RouteObject, Navigate  } from "react-router-dom";
+
+// Public Page
 import HomePage from "./public-pages/HomePage";
 import PortfolioEventPage from "./public-pages/PortfolioEventPage";
 
@@ -17,11 +19,11 @@ import PortfolioAdminListPage from "./admin/pages/PortfolioAdminListPage";
 import PortfolioAdminEditPage from "./admin/pages/PortfolioAdminEditPage";
 import ContactAdminPage from "./admin/pages/ContactAdminPage";
 import SocialAdminPage from "./admin/pages/SocialAdminPage";
-import NavigationAdminPage from "./admin/pages/NavigationAdminPage";
 import SeoAdminPage from "./admin/pages/SeoAdminPage";
 import LanguageAdminPage from "./admin/pages/LanguageAdminPage";
 import SettingsAdminPage from "./admin/pages/SettingsAdminPage";
 import DashboardPage from "./admin/pages/DashboardPage";
+import MessagesAdminPage from './admin/pages/MessagesAdminPage';
 
 // Layout & Guards
 import { AuthGuard } from "./admin/layout/AuthGuard";
@@ -191,10 +193,6 @@ export const routes: RouteObject[] = [
 
       // Settings
       { 
-        path: "navigation", 
-        element: <NavigationAdminPage /> 
-      },
-      { 
         path: "seo", 
         element: <SeoAdminPage /> 
       },
@@ -206,6 +204,10 @@ export const routes: RouteObject[] = [
         path: "settings", 
         element: <SettingsAdminPage /> 
       },
+      { 
+        path: "messages", 
+        element: <MessagesAdminPage /> 
+      },
     ],
   },
 
@@ -216,8 +218,16 @@ export const routes: RouteObject[] = [
   },
 ];
 
+// ✅ إصلاح React Router Warning
 const router = createBrowserRouter(routes);
 
 export function AppRouter() {
-  return <RouterProvider router={router} />;
+  return (
+    <RouterProvider 
+      router={router} 
+      future={{ 
+        v7_startTransition: true 
+      }} 
+    />
+  );
 }

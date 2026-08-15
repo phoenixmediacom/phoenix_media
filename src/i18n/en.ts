@@ -32,6 +32,7 @@ export interface Dictionary {
     subtitle: string;
     name: string;
     email: string;
+    phone: string;
     message: string;
     send: string;
     sending: string;
@@ -60,6 +61,7 @@ export interface Dictionary {
     published: string;
     draft: string;
     logout: string;
+    next: string;
   };
   admin: {
     loginTitle: string;
@@ -76,12 +78,42 @@ export interface Dictionary {
     servicesModule: string;
     portfolioModule: string;
     contactModule: string;
+    messagesModule: string;
     socialModule: string;
     navigationModule: string;
     seoModule: string;
     languageModule: string;
     settingsModule: string;
     overview: string;
+    messages: {
+      title: string;
+      searchPlaceholder: string;
+      filterByStatus: string;
+      allMessages: string;
+      newMessages: string;
+      readMessages: string;
+      repliedMessages: string;
+      archivedMessages: string;
+      noMessages: string;
+      markAsRead: string;
+      markAsReplied: string;
+      archive: string;
+      delete: string;
+      selected: string;
+      selectAll: string;
+      deselectAll: string;
+      bulkActions: string;
+      deleteConfirm: string;
+      viewDetails: string;
+      sender: string;
+      receivedAt: string;
+      status: string;
+      actions: string;
+      messageDetails: string;
+      ipAddress: string;
+      replyByEmail: string;
+      close: string;
+    }
   };
 }
 
@@ -118,7 +150,9 @@ export const en: Dictionary = {
     title: "Let's talk",
     subtitle: "Tell us about your production",
     name: "Full name",
+    phone: "Phone number",
     email: "Email address",
+    
     message: "Project details",
     send: "Send message",
     sending: "Sending…",
@@ -147,6 +181,7 @@ export const en: Dictionary = {
     published: "Published",
     draft: "Draft",
     logout: "Log out",
+    next: "Next",
   },
   admin: {
     loginTitle: "Admin sign in",
@@ -163,11 +198,41 @@ export const en: Dictionary = {
     servicesModule: "Services",
     portfolioModule: "Portfolio",
     contactModule: "Contact",
+    messagesModule: "Messages",
     socialModule: "Social Media",
     navigationModule: "Navigation",
     seoModule: "SEO",
     languageModule: "Language",
     settingsModule: "Settings",
     overview: "Overview",
+      messages: {
+        title: "Manage Messages",
+        searchPlaceholder: "Search messages...",
+        filterByStatus: "Filter by Status",
+        allMessages: "All Messages",
+        newMessages: "New",
+        readMessages: "Read",
+        repliedMessages: "Replied",
+        archivedMessages: "Archived",
+        noMessages: "No messages found",
+        markAsRead: "Mark as Read",
+        markAsReplied: "Mark as Replied",
+        archive: "Archive",
+        delete: "Delete",
+        selected: "selected",
+        selectAll: "Select All",
+        deselectAll: "Deselect All",
+        bulkActions: "Bulk Actions",
+        deleteConfirm: "Are you sure you want to delete selected messages?",
+        viewDetails: "View Details",
+        sender: "Sender",
+        receivedAt: "Received At",
+        status: "Status",
+        actions: "Actions",
+        messageDetails: "Message Details",
+        ipAddress: "IP Address",
+        replyByEmail: "Reply by Email",
+        close: "Close",
+      }
   },
 };

@@ -22,6 +22,7 @@ Demo credentials: `admin@phoenixmedia.com` / `phoenix2026`
 
 
 
+
 ```
 phoenix_media
 ├─ index.html
@@ -44,14 +45,17 @@ phoenix_media
 │  │  │  └─ Sidebar.tsx
 │  │  └─ pages
 │  │     ├─ AboutAdminPage.tsx
+│  │     ├─ auth
+│  │     │  ├─ AuthLayout.tsx
+│  │     │  ├─ ForgotPasswordPage.tsx
+│  │     │  ├─ LoginPage.tsx
+│  │     │  └─ ResetPasswordPage.tsx
 │  │     ├─ ClientsAdminPage.tsx
 │  │     ├─ ContactAdminPage.tsx
 │  │     ├─ DashboardPage.tsx
 │  │     ├─ EquipmentAdminPage.tsx
 │  │     ├─ HeroAdminPage.tsx
 │  │     ├─ LanguageAdminPage.tsx
-│  │     ├─ LoginPage.tsx
-│  │     ├─ NavigationAdminPage.tsx
 │  │     ├─ PortfolioAdminEditPage.tsx
 │  │     ├─ PortfolioAdminListPage.tsx
 │  │     ├─ SeoAdminPage.tsx
@@ -69,6 +73,7 @@ phoenix_media
 │  │  │  ├─ LanguageSwitch.tsx
 │  │  │  ├─ Nav.tsx
 │  │  │  ├─ Section.tsx
+│  │  │  ├─ SeoHead.tsx
 │  │  │  ├─ SocialIcon.tsx
 │  │  │  └─ SocialIcons.tsx
 │  │  └─ ui
@@ -80,9 +85,9 @@ phoenix_media
 │  │     ├─ MediaUploader.tsx
 │  │     ├─ Modal.tsx
 │  │     └─ ReorderList.tsx
-│  ├─ design
 │  ├─ hooks
 │  │  ├─ useAsync.ts
+│  │  ├─ useIdleTimer.ts
 │  │  └─ useScrollProgress.ts
 │  ├─ i18n
 │  │  ├─ ar.ts
@@ -148,11 +153,11 @@ phoenix_media
 │  │  │  ├─ auth.ts
 │  │  │  ├─ clients.ts
 │  │  │  ├─ contact.ts
+│  │  │  ├─ dashboard.ts
 │  │  │  ├─ equipment.ts
 │  │  │  ├─ hero.ts
 │  │  │  ├─ language.ts
 │  │  │  ├─ logoCollectionFactory.ts
-│  │  │  ├─ navigation.ts
 │  │  │  ├─ portfolio.ts
 │  │  │  ├─ seo.ts
 │  │  │  ├─ services.ts
@@ -160,6 +165,8 @@ phoenix_media
 │  │  │  └─ social.ts
 │  │  ├─ localStore.ts
 │  │  └─ types.ts
+│  ├─ utils
+│  │  └─ slug.ts
 │  └─ vite-env.d.ts
 ├─ tailwind.config.ts
 ├─ test
@@ -174,6 +181,7 @@ phoenix_media
 ├─ tsconfig.node.json
 ├─ tsconfig.node.tsbuildinfo
 ├─ vercel.json
+├─ vite-env.d.ts
 ├─ vite.config.ts
 └─ vitest.config.ts
 
