@@ -3,7 +3,6 @@ import axios, { AxiosError, AxiosRequestConfig, AxiosResponse, InternalAxiosRequ
 // تكوين API
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api';
 
-
 // إنشاء Axios instance
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -58,20 +57,29 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor - معالجة الأخطاء
+// Response interceptor
 api.interceptors.response.use(
   (response: AxiosResponse) => response,
   (error: AxiosError) => {
-    // إذا كان الخطأ 401 (غير مصرح)
+    // ✅ معالجة 401
     if (error.response?.status === 401) {
       removeToken();
       
-      // لا نقم بالتحويل القسري لصفحة اللوجن إلا إذا كان المستخدم داخل مسار لوحة التحكم (/admin)
       const currentPath = window.location.pathname;
       if (currentPath.startsWith('/admin') && !currentPath.startsWith('/admin/auth')) {
         window.location.href = '/admin/auth/login';
       }
     }
+    
+    // ✅ معالجة CORS errors
+    if (!error.response && error.message.includes('Network Error')) {
+      console.error('❌ CORS or Network Error:', {
+        message: error.message,
+        config: error.config,
+        apiUrl: API_BASE_URL,
+      });
+    }
+    
     return Promise.reject(error);
   }
 );
