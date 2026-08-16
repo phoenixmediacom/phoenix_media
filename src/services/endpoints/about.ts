@@ -15,7 +15,7 @@ const bgStyleFromApi: Record<number, AboutContent["backgroundVariant"]> = {
 
 export async function getAbout(): Promise<AboutContent> {
   const res = await request<{ data: any }>({
-    url: "/public/about",
+    url: "/api/public/about",
     method: "GET",
   });
 
@@ -56,7 +56,7 @@ export async function updateAbout(content: AboutContent): Promise<AboutContent> 
   };
 
   const res = await request<{ data: any }>({
-    url: "/admin/about",
+    url: "/api/admin/about",
     method: "POST",
     data: payload,
   });

@@ -38,7 +38,7 @@ export const getSeoSettings = getPublicSeoSettings;
 // 2. لوحة التحكم (Admin)
 export async function getAdminSeoSettings(): Promise<SeoSettings> {
   return request({
-    url: "/admin/seo",
+    url: "/api/admin/seo",
     method: "GET",
   }).then((res: any) => mapSeoFromApi(res.data || res));
 }
@@ -53,7 +53,7 @@ export async function updateSeoSettings(settings: SeoSettings): Promise<SeoSetti
   };
 
   return request({
-    url: "/admin/seo",
+    url: "/api/admin/seo",
     method: "POST",
     data: payload,
   }).then((res: any) => mapSeoFromApi(res.data || res));

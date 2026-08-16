@@ -23,7 +23,7 @@ function mapServiceFromApi(item: any): ServiceItem {
 // 1. الواجهة العامة (Public)
 export async function getPublicServices(): Promise<ServiceItem[]> {
   return request({
-    url: "/public/services",
+    url: "/api/public/services",
     method: "GET",
   }).then((res: any) => {
     const list = res?.data || res || [];
@@ -34,7 +34,7 @@ export async function getPublicServices(): Promise<ServiceItem[]> {
 // 2. لوحة التحكم (Admin)
 export async function listServices(): Promise<ServiceItem[]> {
   return request({
-    url: "/admin/services",
+    url: "/api/admin/services",
     method: "GET",
   }).then((res: any) => {
     const list = res?.data || res || [];
@@ -58,7 +58,7 @@ export async function createService(
   }
 
   return request({
-    url: "/admin/services",
+    url: "/api/admin/services",
     method: "POST",
     data: formData,
     headers: {
@@ -92,7 +92,7 @@ export async function updateService(
   }
 
   return request({
-    url: `/admin/services/${id}`,
+    url: `/api/admin/services/${id}`,
     method: "POST", // ✅ نستخدم POST مع _method=PUT
     data: formData,
     headers: {
@@ -103,7 +103,7 @@ export async function updateService(
 
 export async function deleteService(id: string): Promise<void> {
   return request({
-    url: `/admin/services/${id}`,
+    url: `/api/admin/services/${id}`,
     method: "DELETE",
   });
 }
@@ -114,7 +114,7 @@ export async function reorderServices(orderedIds: string[]): Promise<void> {
   };
 
   return request({
-    url: "/admin/services/reorder",
+    url: "/api/admin/services/reorder",
     method: "POST",
     data: payload,
   });

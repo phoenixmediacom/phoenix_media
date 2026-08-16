@@ -3,7 +3,7 @@ import type { HeroContent, VideoSourceType } from '../types';
 
 export async function getHero(): Promise<HeroContent> {
   try {
-    const response = await api.get<{ data: any }>('/public/settings');
+    const response = await api.get<{ data: any }>('/api/public/settings');
     const settings = response.data?.data || response.data;
 
     if (!settings) {
@@ -63,7 +63,7 @@ export async function updateHero(
       formData.append('logo_url', content.logoUrl);
     }
 
-    const response = await api.post('/admin/settings', formData, {
+    const response = await api.post('/api/admin/settings', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },

@@ -13,7 +13,7 @@ function mapSocialFromApi(item: any): SocialLink {
 // 1. الواجهة العامة (Public)
 export async function getPublicSocialLinks(): Promise<SocialLink[]> {
   const res = await request<any>({
-    url: "/public/social-media",
+    url: "/api/public/social-media",
     method: "GET",
   });
   const data = res.data || res;
@@ -23,7 +23,7 @@ export async function getPublicSocialLinks(): Promise<SocialLink[]> {
 // 2. لوحة التحكم (Admin)
 export async function listSocialLinks(): Promise<SocialLink[]> {
   const res = await request<any>({
-    url: "/admin/social-media",
+    url: "/api/admin/social-media",
     method: "GET",
   });
   const data = res.data || res;
@@ -34,7 +34,7 @@ export async function createSocialLink(
   input: Omit<SocialLink, "id" | "order">,
 ): Promise<SocialLink> {
   const res = await request<any>({
-    url: "/admin/social-media",
+    url: "/api/admin/social-media",
     method: "POST",
     data: input,
   });
@@ -47,7 +47,7 @@ export async function updateSocialLink(
   patch: Partial<SocialLink>,
 ): Promise<SocialLink> {
   const res = await request<any>({
-    url: `/admin/social-media/${id}`,
+    url: `/api/admin/social-media/${id}`,
     method: "POST", // ✅ كان PUT
     data: patch,
   });
@@ -56,7 +56,7 @@ export async function updateSocialLink(
 
 export async function deleteSocialLink(id: string): Promise<void> {
   await request({
-    url: `/admin/social-media/${id}`,
+    url: `/api/admin/social-media/${id}`,
     method: "DELETE",
   });
 }
@@ -68,7 +68,7 @@ export async function reorderSocialLinks(orderedIds: string[]): Promise<void> {
   }));
 
   await request({
-    url: "/admin/social-media/reorder",
+    url: "/api/admin/social-media/reorder",
     method: "POST",
     data: { orders },
   });

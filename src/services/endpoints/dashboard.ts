@@ -9,7 +9,7 @@ export interface DashboardStats {
 
 export async function getDashboardStats(): Promise<DashboardStats> {
   return request({
-    url: "/admin/dashboard",
+    url: "/api/admin/dashboard",
     method: "GET",
   }).then((res: any) => res.data?.stats || res.stats);
 }

@@ -50,7 +50,7 @@ export async function submitContactForm(data: {
   url?: string;
 }): Promise<void> {
   return request({
-    url: "/public/contact/submit",
+    url: "/api/public/contact/submit",
     method: "POST",
     data,
   });
@@ -59,7 +59,7 @@ export async function submitContactForm(data: {
 // 2. لوحة التحكم (Admin)
 export async function getAdminContactInfo(): Promise<ContactInfo> {
   return request({
-    url: "/admin/contact",
+    url: "/api/admin/contact",
     method: "GET",
   }).then((res: any) => mapContactFromApi(res?.data || res));
 }
@@ -74,7 +74,7 @@ export async function updateContactInfo(info: ContactInfo): Promise<ContactInfo>
   };
 
   return request({
-    url: "/admin/contact",
+    url: "/api/admin/contact",
     method: "POST",
     data: payload,
   }).then((res: any) => mapContactFromApi(res?.data || res));
@@ -133,7 +133,7 @@ export async function listContactSubmissions(
   filters: SubmissionsFilters = {}
 ): Promise<SubmissionsResponse> {
   return request({
-    url: "/admin/contact/submissions",
+    url: "/api/admin/contact/submissions",
     method: "GET",
     params: filters,
   }).then((res: any) => ({
@@ -148,7 +148,7 @@ export async function listContactSubmissions(
  */
 export async function getSubmission(id: string): Promise<ContactSubmission> {
   return request({
-    url: `/admin/contact/submissions/${id}`,
+    url: `/api/admin/contact/submissions/${id}`,
     method: "GET",
   }).then((res: any) => mapSubmissionFromApi(res?.data || res));
 }
@@ -161,7 +161,7 @@ export async function updateSubmissionStatus(
   status: 'new' | 'read' | 'replied' | 'archived'
 ): Promise<ContactSubmission> {
   return request({
-    url: `/admin/contact/submissions/${id}/status`,
+    url: `/api/admin/contact/submissions/${id}/status`,
     method: "PATCH",
     data: { status },
   }).then((res: any) => mapSubmissionFromApi(res?.data || res));
@@ -172,7 +172,7 @@ export async function updateSubmissionStatus(
  */
 export async function markSubmissionAsRead(id: string): Promise<ContactSubmission> {
   return request({
-    url: `/admin/contact/submissions/${id}/read`,
+    url: `/api/admin/contact/submissions/${id}/read`,
     method: "PATCH",
   }).then((res: any) => mapSubmissionFromApi(res?.data || res));
 }
@@ -182,7 +182,7 @@ export async function markSubmissionAsRead(id: string): Promise<ContactSubmissio
  */
 export async function archiveSubmission(id: string): Promise<ContactSubmission> {
   return request({
-    url: `/admin/contact/submissions/${id}/archive`,
+    url: `/api/admin/contact/submissions/${id}/archive`,
     method: "PATCH",
   }).then((res: any) => mapSubmissionFromApi(res?.data || res));
 }
@@ -192,7 +192,7 @@ export async function archiveSubmission(id: string): Promise<ContactSubmission> 
  */
 export async function deleteSubmission(id: string): Promise<void> {
   return request({
-    url: `/admin/contact/submissions/${id}`,
+    url: `/api/admin/contact/submissions/${id}`,
     method: "DELETE",
   });
 }
@@ -208,7 +208,7 @@ export async function deleteSubmission(id: string): Promise<void> {
  */
 export async function markMultipleAsRead(ids: string[]): Promise<{ count: number }> {
   return request({
-    url: "/admin/contact/submissions/bulk/read",
+    url: "/api/admin/contact/submissions/bulk/read",
     method: "POST",
     data: { ids },
   });
@@ -219,7 +219,7 @@ export async function markMultipleAsRead(ids: string[]): Promise<{ count: number
  */
 export async function archiveMultiple(ids: string[]): Promise<{ count: number }> {
   return request({
-    url: "/admin/contact/submissions/bulk/archive",
+    url: "/api/admin/contact/submissions/bulk/archive",
     method: "POST",
     data: { ids },
   });
@@ -230,7 +230,7 @@ export async function archiveMultiple(ids: string[]): Promise<{ count: number }>
  */
 export async function deleteMultiple(ids: string[]): Promise<{ count: number }> {
   return request({
-    url: "/admin/contact/submissions/bulk/delete",
+    url: "/api/admin/contact/submissions/bulk/delete",
     method: "POST",
     data: { ids },
   });
@@ -241,7 +241,7 @@ export async function deleteMultiple(ids: string[]): Promise<{ count: number }> 
  */
 export async function deleteAllArchived(): Promise<{ count: number }> {
   return request({
-    url: "/admin/contact/submissions/archived/all",
+    url: "/api/admin/contact/submissions/archived/all",
     method: "DELETE",
   });
 }
@@ -257,7 +257,7 @@ export async function deleteAllArchived(): Promise<{ count: number }> {
  */
 export async function getSubmissionsStatistics(): Promise<SubmissionStats> {
   return request({
-    url: "/admin/contact/submissions/statistics",
+    url: "/api/admin/contact/submissions/statistics",
     method: "GET",
   }).then((res: any) => res?.data || res);
 }

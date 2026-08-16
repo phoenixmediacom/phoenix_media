@@ -3,7 +3,7 @@ import type { LogoItem } from "../types";
 
 // جلب للعملاء في الواجهة العامة (Public)
 export async function getPublicClients(): Promise<LogoItem[]> {
-  const response = await api.get<{ data: any[] }>("/public/clients");
+  const response = await api.get<{ data: any[] }>("/api/public/clients");
   return (response.data.data || response.data || []).map((item) => ({
     id: String(item.id),
     name: item.name,
@@ -14,7 +14,7 @@ export async function getPublicClients(): Promise<LogoItem[]> {
 
 // جلب العملاء في لوحة التحكم (Admin)
 export async function listClients(): Promise<LogoItem[]> {
-  const response = await api.get<{ data: any[] }>("/admin/clients");
+  const response = await api.get<{ data: any[] }>("/api/admin/clients");
   return (response.data.data || response.data || []).map((item) => ({
     id: String(item.id),
     name: item.name,
@@ -26,7 +26,7 @@ export async function listClients(): Promise<LogoItem[]> {
 export async function createClient(
   input: Omit<LogoItem, "id" | "order">
 ): Promise<LogoItem> {
-  const response = await api.post<{ data: any }>("/admin/clients", {
+  const response = await api.post<{ data: any }>("/api/admin/clients", {
     name: input.name,
     logo_url: input.logoUrl,
   });
@@ -48,7 +48,7 @@ export async function updateClient(
   if (patch.logoUrl !== undefined) payload.logo_url = patch.logoUrl;
 
   // تم استخدام POST لتنفيذ التحديث بما يتوافق مع Laravel Routes: Route::post('/{client}', ...)
-  const response = await api.post<{ data: any }>(`/admin/clients/${id}`, payload);
+  const response = await api.post<{ data: any }>(`/api/admin/clients/${id}`, payload);
   const updated = response.data.data || response.data;
   return {
     id: String(updated.id),
@@ -59,7 +59,7 @@ export async function updateClient(
 }
 
 export async function deleteClient(id: string): Promise<void> {
-  await api.delete(`/admin/clients/${id}`);
+  await api.delete(`/api/admin/clients/${id}`);
 }
 
 export async function reorderClients(orderedIds: string[]): Promise<LogoItem[]> {
@@ -68,6 +68,6 @@ export async function reorderClients(orderedIds: string[]): Promise<LogoItem[]> 
     order: index + 1,
   }));
 
-  await api.post("/admin/clients/reorder", { orders });
+  await api.post("/api/admin/clients/reorder", { orders });
   return listClients();
 }

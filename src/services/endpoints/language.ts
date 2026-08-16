@@ -17,7 +17,7 @@ export interface TranslationItem {
 export async function getLanguageOverrides(): Promise<LanguageOverrides> {
   const response = await request<{ data: TranslationItem[] }>({
     method: "GET",
-    url: "/public/translations",
+    url: "/api/public/translations",
   });
 
   const items = response.data || [];
@@ -40,7 +40,7 @@ export async function getAdminTranslations(): Promise<{
 }> {
   const response = await request<{ data: TranslationItem[] }>({
     method: "GET",
-    url: "/admin/translations",
+    url: "/api/admin/translations",
   });
 
   const items = response.data || [];
@@ -66,7 +66,7 @@ export async function updateTranslation(
 ): Promise<TranslationItem> {
   const response = await request<{ data: TranslationItem }>({
     method: "PUT",
-    url: `/admin/translations/${id}`,
+    url: `/api/admin/translations/${id}`,
     data: { value },
   });
 
