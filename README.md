@@ -25,6 +25,9 @@ Demo credentials: `admin@phoenixmedia.com` / `phoenix2026`
 
 ```
 phoenix_media
+├─ api
+│  ├─ og-image.ts
+│  └─ seo.ts
 ├─ index.html
 ├─ package-lock.json
 ├─ package.json
@@ -56,6 +59,7 @@ phoenix_media
 │  │     ├─ EquipmentAdminPage.tsx
 │  │     ├─ HeroAdminPage.tsx
 │  │     ├─ LanguageAdminPage.tsx
+│  │     ├─ MessagesAdminPage.tsx
 │  │     ├─ PortfolioAdminEditPage.tsx
 │  │     ├─ PortfolioAdminListPage.tsx
 │  │     ├─ SeoAdminPage.tsx
@@ -76,6 +80,7 @@ phoenix_media
 │  │  │  ├─ SeoHead.tsx
 │  │  │  ├─ SocialIcon.tsx
 │  │  │  └─ SocialIcons.tsx
+│  │  ├─ SimplePhoenixLoader.tsx
 │  │  └─ ui
 │  │     ├─ AsyncStates.tsx
 │  │     ├─ Button.tsx
@@ -84,7 +89,10 @@ phoenix_media
 │  │     ├─ LogoLoop.tsx
 │  │     ├─ MediaUploader.tsx
 │  │     ├─ Modal.tsx
-│  │     └─ ReorderList.tsx
+│  │     ├─ ReorderList.tsx
+│  │     └─ ThemeToggle.tsx
+│  ├─ contexts
+│  │  └─ ThemeContext.tsx
 │  ├─ hooks
 │  │  ├─ useAsync.ts
 │  │  ├─ useIdleTimer.ts
@@ -94,42 +102,9 @@ phoenix_media
 │  │  ├─ en.ts
 │  │  └─ index.tsx
 │  ├─ index.css
-│  ├─ loader
-│  │  ├─ engine
-│  │  │  ├─ camera
-│  │  │  │  ├─ camera.config.ts
-│  │  │  │  ├─ camera.types.ts
-│  │  │  │  ├─ CameraStage.tsx
-│  │  │  │  └─ useCinematicCamera.ts
-│  │  │  ├─ CinematicLoadingEngine.tsx
-│  │  │  ├─ EngineErrorBoundary.tsx
-│  │  │  ├─ sequence.defaults.ts
-│  │  │  ├─ sequence.types.ts
-│  │  │  ├─ stage
-│  │  │  │  ├─ BodySlot.tsx
-│  │  │  │  ├─ GlowSlot.tsx
-│  │  │  │  ├─ IgnitionSlot.tsx
-│  │  │  │  └─ TrailSlot.tsx
-│  │  │  └─ useCinematicSequence.ts
-│  │  ├─ hooks
-│  │  │  ├─ useLoadingTimeout.ts
-│  │  │  └─ usePrefersReducedMotion.ts
-│  │  ├─ themes
-│  │  │  └─ phoenix
-│  │  │     ├─ assets
-│  │  │     │  └─ phoenix.svg
-│  │  │     ├─ components
-│  │  │     │  ├─ PhoenixBody.tsx
-│  │  │     │  ├─ PhoenixGlow.tsx
-│  │  │     │  ├─ PhoenixIgnition.tsx
-│  │  │     │  └─ PhoenixTrail.tsx
-│  │  │     ├─ phoenix.config.ts
-│  │  │     ├─ phoenix.theme.ts
-│  │  │     ├─ phoenix.types.ts
-│  │  │     └─ usePhoenixSequence.ts
-│  │  └─ utils
-│  │     └─ svgGeometry.ts
 │  ├─ main.tsx
+│  ├─ pages
+│  │  └─ ApiTestPage.tsx
 │  ├─ public-pages
 │  │  ├─ HomePage.tsx
 │  │  ├─ PortfolioEventPage.tsx
@@ -157,13 +132,11 @@ phoenix_media
 │  │  │  ├─ equipment.ts
 │  │  │  ├─ hero.ts
 │  │  │  ├─ language.ts
-│  │  │  ├─ logoCollectionFactory.ts
 │  │  │  ├─ portfolio.ts
 │  │  │  ├─ seo.ts
 │  │  │  ├─ services.ts
 │  │  │  ├─ settings.ts
 │  │  │  └─ social.ts
-│  │  ├─ localStore.ts
 │  │  └─ types.ts
 │  ├─ utils
 │  │  └─ slug.ts
@@ -176,12 +149,9 @@ phoenix_media
 │  ├─ setup.ts
 │  └─ testUtils.tsx
 ├─ tsconfig.app.json
-├─ tsconfig.app.tsbuildinfo
 ├─ tsconfig.json
 ├─ tsconfig.node.json
-├─ tsconfig.node.tsbuildinfo
 ├─ vercel.json
-├─ vite-env.d.ts
 ├─ vite.config.ts
 └─ vitest.config.ts
 
