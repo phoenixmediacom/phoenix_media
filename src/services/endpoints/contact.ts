@@ -35,7 +35,7 @@ function mapSubmissionFromApi(item: any): ContactSubmission {
 // 1. الواجهة العامة (Public)
 export async function getContactInfo(): Promise<ContactInfo> {
   return request({
-    url: "/public/contact",
+    url: "/api/public/contact",
     method: "GET",
   }).then((res: any) => mapContactFromApi(res?.data || res));
 }
