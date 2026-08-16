@@ -80,7 +80,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         let defaultLang: Language = "ar";
         
         try {
-          const settingsResponse = await fetch(`${API_BASE_URL}/public/settings`, {
+          const settingsResponse = await fetch(`${API_BASE_URL}/api/public/settings`, {
             headers: { "Accept": "application/json" },
           });
 
@@ -100,7 +100,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
         // ✅ 2. جلب الترجمات من DB
         try {
-          const translationsResponse = await fetch(`${API_BASE_URL}/public/translations`, {
+          const translationsResponse = await fetch(`${API_BASE_URL}/api/public/translations`, {
             headers: { "Accept": "application/json" },
           });
 
