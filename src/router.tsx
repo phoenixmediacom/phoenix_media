@@ -30,7 +30,6 @@ import { AuthGuard } from "./admin/layout/AuthGuard";
 import { AdminLayout } from "./admin/layout/AdminLayout";
 import { isAuthenticated } from "./services/apiClient";
 
-import ApiTestPage from "./pages/ApiTestPage";
 
 /**
  * Protected Admin Shell - wrapper for all admin routes
@@ -131,11 +130,6 @@ export const routes: RouteObject[] = [
   { 
     path: "/admin/login", 
     element: <Navigate to="/admin/auth/login" replace /> 
-  },
-
-  {
-    path: "/test-api",
-    element: <ApiTestPage />
   },
   // Protected Admin Routes
   {
