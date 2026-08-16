@@ -25,7 +25,7 @@ export async function getPublicSettings(): Promise<GeneralSettings> {
 // 2. لوحة التحكم (Admin)
 export async function getGeneralSettings(): Promise<GeneralSettings> {
   try {
-    const response = await api.get<{ data: any }>("/admin/settings");
+    const response = await api.get<{ data: any }>("api/admin/settings");
     return mapSettingsFromApi(response.data?.data || response.data);
   } catch (error: any) {
     console.error("Failed to fetch general settings:", error);
@@ -45,7 +45,7 @@ export async function updateGeneralSettings(
       maintenance_mode: settings.maintenanceMode,
     };
 
-    const response = await api.post("/admin/settings", payload);
+    const response = await api.post("api/admin/settings", payload);
     return mapSettingsFromApi(response.data?.data || response.data);
   } catch (error: any) {
     console.error("Failed to update general settings:", error);
