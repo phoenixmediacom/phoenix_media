@@ -14,7 +14,7 @@ function mapSettingsFromApi(settings: any): GeneralSettings {
 // 1. الواجهة العامة (Public)
 export async function getPublicSettings(): Promise<GeneralSettings> {
   try {
-    const response = await api.get<{ data: any }>("/public/settings");
+    const response = await api.get<{ data: any }>("api/public/settings");
     return mapSettingsFromApi(response.data?.data || response.data);
   } catch (error: any) {
     console.error("Failed to fetch public settings:", error);

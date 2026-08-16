@@ -60,14 +60,14 @@ export default function ApiTestPage() {
 
       try {
         // 4. Test SEO (استخدام API_URL مباشرة)
-        console.log("Testing SEO:", `${API_URL}/public/seo`);
-        const seoRes = await axios.get(`${API_URL}/public/seo`);
+        console.log("Testing SEO:", `${API_URL}api/public/seo`);
+        const seoRes = await axios.get(`${API_URL}api/public/seo`);
         tests.seo = { status: "✅ Success", data: seoRes.data };
       } catch (error: any) {
         tests.seo = { 
           status: "❌ Failed", 
           error: error.message,
-          url: `${API_URL}/public/seo`
+          url: `${API_URL}api/public/seo`
         };
       }
 
