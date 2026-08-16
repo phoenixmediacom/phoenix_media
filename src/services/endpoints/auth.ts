@@ -63,7 +63,7 @@ export interface ResetPasswordRequest {
  */
 export async function login(email: string, password: string): Promise<LoginResponse> {
   try {
-    const response = await api.post<LoginResponse>('/auth/login', {
+    const response = await api.post<LoginResponse>('/api/auth/login', {
       email,
       password,
     });
@@ -84,12 +84,12 @@ export async function login(email: string, password: string): Promise<LoginRespo
  */
 export async function logout(): Promise<void> {
   try {
-    await api.post('/auth/logout');
+    await api.post('/api/auth/logout');
   } catch (error) {
     console.error('Logout error:', error);
   } finally {
     removeToken();
-    window.location.href = '/admin/auth/login';
+    window.location.href = '/api/admin/auth/login';
   }
 }
 
@@ -98,7 +98,7 @@ export async function logout(): Promise<void> {
  */
 export async function getCurrentUser(): Promise<User> {
   try {
-    const response = await api.get<{ user: User }>('/auth/me');
+    const response = await api.get<{ user: User }>('/api/auth/me');
     setUser(response.data.user);
     return response.data.user;
   } catch (error: any) {
@@ -114,7 +114,7 @@ export async function getCurrentUser(): Promise<User> {
  */
 export async function sendOtp(email: string): Promise<SendOtpResponse> {
   try {
-    const response = await api.post<SendOtpResponse>('/auth/send-otp', {
+    const response = await api.post<SendOtpResponse>('/api/auth/send-otp', {
       email,
     });
     return response.data;
@@ -129,7 +129,7 @@ export async function sendOtp(email: string): Promise<SendOtpResponse> {
  */
 export async function verifyOtp(email: string, otp: string): Promise<VerifyOtpResponse> {
   try {
-    const response = await api.post<VerifyOtpResponse>('/auth/verify-otp', {
+    const response = await api.post<VerifyOtpResponse>('/api/auth/verify-otp', {
       email,
       otp,
     });
@@ -145,7 +145,7 @@ export async function verifyOtp(email: string, otp: string): Promise<VerifyOtpRe
  */
 export async function resetPassword(data: ResetPasswordRequest): Promise<{ message: string }> {
   try {
-    const response = await api.post<{ message: string }>('/auth/reset-password', data);
+    const response = await api.post<{ message: string }>('/api/auth/reset-password', data);
     return response.data;
   } catch (error: any) {
     const message = error.response?.data?.message || 'فشل إعادة تعيين كلمة المرور';
