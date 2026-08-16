@@ -1,7 +1,7 @@
 import axios, { AxiosError, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig  } from 'axios';
 
 // تكوين API
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://phoenix-media-api.onrender.com';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://phoenix-media-api.onrender.com/api';
 
 // إنشاء Axios instance
 const api = axios.create({
