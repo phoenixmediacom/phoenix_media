@@ -27,7 +27,7 @@ function mapSeoFromApi(data: any): SeoSettings {
 // 1. الواجهة العامة (Public)
 export async function getPublicSeoSettings(): Promise<SeoSettings> {
   return request({
-    url: "/public/seo",
+    url: "/api/public/seo",
     method: "GET",
   }).then((res: any) => mapSeoFromApi(res.data || res));
 }
