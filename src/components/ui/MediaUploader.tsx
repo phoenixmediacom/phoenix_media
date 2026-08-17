@@ -115,6 +115,13 @@ export function MediaUploader({
       formData.append('file', file);
       formData.append('folder', folder);
 
+      console.log('📤 Uploading file:', {
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      folder: folder,
+    });
+
       const response = await api.post('/api/admin/media/upload', formData, {
         signal: abortControllerRef.current.signal,
         headers: {
@@ -125,11 +132,13 @@ export function MediaUploader({
             const percentCompleted = Math.round(
               (progressEvent.loaded * 100) / progressEvent.total
             );
+            console.log('📊 Progress:', percentCompleted + '%');
             setUploadProgress(percentCompleted);
           }
         },
       });
 
+      console.log('✅ Upload response:', response.data);
       const uploadedUrl =
         response.data?.data?.url ||
         response.data?.url ||
@@ -147,6 +156,12 @@ export function MediaUploader({
         return;
       }
 
+      console.error('❌ Upload failed:', {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status,
+    });
+    
       console.error('Upload failed:', error);
       setUploadError(
         error.response?.data?.message || error.message || 'فشل رفع الملف'
