@@ -82,14 +82,14 @@ export async function login(email: string, password: string): Promise<LoginRespo
 /**
  * Logout
  */
-export async function logout(): Promise<void> {
+export async function logout(redirect: string = '/admin/auth/login'): Promise<void> {
   try {
     await api.post('/api/auth/logout');
   } catch (error) {
     console.error('Logout error:', error);
   } finally {
     removeToken();
-    window.location.href = '/admin/auth/login';
+    window.location.href = redirect;  // ✅ استخدام المسار المُمرر
   }
 }
 

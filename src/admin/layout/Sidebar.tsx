@@ -119,10 +119,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
       {/* Footer */}
       <div className="p-4 border-t border-glass-border">
         <button
-          onClick={() => {
-            logout();
-            navigate("/admin/login");
-          }}
+          onClick={() => logout('/admin/auth/login')}
           className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-on-surface-variant hover:text-error transition-colors"
         >
           <span aria-hidden="true">🚪</span>
