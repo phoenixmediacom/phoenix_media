@@ -115,7 +115,7 @@ export function MediaUploader({
       formData.append('file', file);
       formData.append('folder', folder);
 
-      const response = await api.post('/admin/media/upload', formData, {
+      const response = await api.post('/api/admin/media/upload', formData, {
         signal: abortControllerRef.current.signal,
         headers: {
           'Content-Type': 'multipart/form-data',
