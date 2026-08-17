@@ -4,11 +4,24 @@
   "framework": "vite",
   "rewrites": [
     {
+      "source": "/api/seo-meta",
+      "destination": "/api/seo-meta.js"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
   ],
   "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=60, s-maxage=3600"
+        }
+      ]
+    },
     {
       "source": "/(.*)",
       "headers": [
@@ -23,6 +36,10 @@
         {
           "key": "X-XSS-Protection",
           "value": "1; mode=block"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
         }
       ]
     }
