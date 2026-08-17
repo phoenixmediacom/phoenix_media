@@ -40,17 +40,14 @@ function isVideoUrl(url: string): boolean {
          url.match(/\.(mp4|webm|ogg|mov)(\?.*)?$/i) !== null;
 }
 
-// ✅ دالة محسّنة لجلب thumbnail YouTube
-function getYouTubeThumbnail(url: string, quality: 'default' | 'hq' | 'mq' | 'sd' | 'maxres' = 'maxres'): string {
-  const videoId = extractYouTubeId(url);
+// ✅ دالة محسّنة لجلب thumbnail YouTube (مع fallback تلقائي)
+function getYouTubeThumbnailUrl(videoId: string, quality: 'hq' | 'mq' | 'sd' = 'hq'): string {
   if (!videoId) return '';
   
   const qualityMap = {
-    'default': 'default.jpg',
-    'mq': 'mqdefault.jpg',
-    'hq': 'hqdefault.jpg',
-    'sd': 'sddefault.jpg',
-    'maxres': 'maxresdefault.jpg',
+    'hq': 'hqdefault.jpg',      // 480x360 - يعمل دائماً
+    'mq': 'mqdefault.jpg',      // 320x180 - يعمل دائماً
+    'sd': 'sddefault.jpg',      // 640x480 - قد لا يتوفر
   };
   
   return `https://img.youtube.com/vi/${videoId}/${qualityMap[quality]}`;
@@ -326,41 +323,36 @@ function CinematicHeroVideo({
   );
 }
 
-// ✅ Component محسّن لعرض Video Thumbnail
+// ✅ Component محسّن مع fallback تلقائي
 function VideoThumbnail({ url, caption }: { url: string; caption?: string }) {
-  const [imageError, setImageError] = useState(false);
-  const [currentQuality, setCurrentQuality] = useState<'maxres' | 'hq' | 'mq'>('maxres');
+  const [thumbnailUrl, setThumbnailUrl] = useState<string>('');
 
-  const handleImageError = () => {
-    if (currentQuality === 'maxres') {
-      setCurrentQuality('hq');
-    } else if (currentQuality === 'hq') {
-      setCurrentQuality('mq');
-    } else {
-      setImageError(true);
+  // ✅ استخدام hqdefault مباشرة (يعمل دائماً)
+  useState(() => {
+    if (isYouTubeUrl(url)) {
+      const videoId = extractYouTubeId(url);
+      setThumbnailUrl(getYouTubeThumbnailUrl(videoId, 'hq'));
     }
-  };
+  });
 
   if (isYouTubeUrl(url)) {
-    const thumbnailUrl = getYouTubeThumbnail(url, currentQuality);
+    const videoId = extractYouTubeId(url);
+    const fallbackUrl = getYouTubeThumbnailUrl(videoId, 'mq');
     
     return (
       <div className="relative w-full aspect-video bg-black">
-        {!imageError && thumbnailUrl ? (
-          <img
-            src={thumbnailUrl}
-            alt={caption ?? "Video"}
-            className="w-full h-full object-cover"
-            onError={handleImageError}
-            loading="lazy"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
-            <svg className="w-20 h-20 text-white/30" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M10 15l5.19-3L10 9v6m11.56-7.83c.13.47.22 1.1.28 1.9.07.8.1 1.49.1 2.09L22 12c0 2.19-.16 3.8-.44 4.83-.25.9-.83 1.48-1.73 1.73-.47.13-1.33.22-2.65.28-1.3.07-2.49.1-3.59.1L12 19c-4.19 0-6.8-.16-7.83-.44-.9-.25-1.48-.83-1.73-1.73-.13-.47-.22-1.1-.28-1.9-.07-.8-.1-1.49-.1-2.09L2 12c0-2.19.16-3.8.44-4.83.25-.9.83-1.48 1.73-1.73.47-.13 1.33-.22 2.65-.28 1.3-.07 2.49-.1 3.59-.1L12 5c4.19 0 6.8.16 7.83.44.9.25 1.48.83 1.73 1.73z"/>
-            </svg>
-          </div>
-        )}
+        <img
+          src={thumbnailUrl || fallbackUrl}
+          alt={caption ?? "Video"}
+          className="w-full h-full object-cover"
+          onError={(e) => {
+            // ✅ Fallback نهائي
+            if (e.currentTarget.src !== fallbackUrl) {
+              e.currentTarget.src = fallbackUrl;
+            }
+          }}
+          loading="lazy"
+        />
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <span className="h-16 w-16 rounded-full bg-primary/90 text-black flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform duration-300">
             <svg className="w-7 h-7 fill-current translate-x-0.5" viewBox="0 0 24 24">

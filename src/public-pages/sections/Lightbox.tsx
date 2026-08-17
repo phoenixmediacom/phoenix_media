@@ -10,7 +10,6 @@ interface LightboxProps {
   onNavigate: (index: number) => void;
 }
 
-// 🔧 دوال مساعدة
 function isYouTubeUrl(url: string): boolean {
   return url.includes('youtube.com') || url.includes('youtu.be');
 }
@@ -40,26 +39,20 @@ function extractVimeoId(url: string): string {
 
 function getYouTubeThumbnail(url: string): string {
   const id = extractYouTubeId(url);
-  return id ? `https://img.youtube.com/vi/${id}/maxresdefault.jpg` : '';
+  return id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : '';
 }
 
-// ✅ دالة مساعدة لعرض Caption
 function getCaptionText(caption: string | { ar?: string; en?: string } | undefined, locale: "ar" | "en"): string {
   if (!caption) return '';
-  
-  // إذا كان string عادي
   if (typeof caption === 'string') return caption;
-  
-  // إذا كان object
   if (typeof caption === 'object') {
     return caption[locale] || caption.en || caption.ar || '';
   }
-  
   return '';
 }
 
 export function Lightbox({ items, index, onClose, onNavigate }: LightboxProps) {
-  const { locale } = useI18n(); // ✅ جلب اللغة الحالية
+  const { locale } = useI18n();
   const item = items[index];
   const [videoStarted, setVideoStarted] = useState(false);
 
@@ -68,10 +61,9 @@ export function Lightbox({ items, index, onClose, onNavigate }: LightboxProps) {
     
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") onClose();
-      if (item.type === "image") {
-        if (e.key === "ArrowRight") onNavigate((index + 1) % items.length);
-        if (e.key === "ArrowLeft") onNavigate((index - 1 + items.length) % items.length);
-      }
+      // ✅ السماح بالتنقل حتى مع الفيديوهات
+      if (e.key === "ArrowRight") onNavigate((index + 1) % items.length);
+      if (e.key === "ArrowLeft") onNavigate((index - 1 + items.length) % items.length);
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -83,9 +75,9 @@ export function Lightbox({ items, index, onClose, onNavigate }: LightboxProps) {
   const isVimeo = item.type === "video" && isVimeoUrl(item.url);
   const isDirectVideo = item.type === "video" && !isYouTube && !isVimeo;
 
-  const showNavigation = item.type === "image" && items.length > 1;
+  // ✅ إظهار أزرار التنقل دائماً إذا كان هناك أكثر من عنصر
+  const showNavigation = items.length > 1;
 
-  // ✅ الحصول على النص الصحيح للـ caption
   const captionText = getCaptionText(item.caption, locale);
 
   return (
@@ -99,7 +91,6 @@ export function Lightbox({ items, index, onClose, onNavigate }: LightboxProps) {
         exit={{ opacity: 0 }}
         onClick={onClose}
       >
-        {/* زر الإغلاق */}
         <button
           onClick={onClose}
           aria-label="Close"
@@ -108,7 +99,7 @@ export function Lightbox({ items, index, onClose, onNavigate }: LightboxProps) {
           ✕
         </button>
 
-        {/* أزرار التنقل - فقط للصور */}
+        {/* ✅ أزرار التنقل - تظهر دائماً */}
         {showNavigation && (
           <>
             <button
@@ -134,7 +125,6 @@ export function Lightbox({ items, index, onClose, onNavigate }: LightboxProps) {
           </>
         )}
 
-        {/* المحتوى الرئيسي */}
         <motion.div
           key={item.id}
           initial={{ opacity: 0, scale: 0.96 }}
@@ -144,7 +134,6 @@ export function Lightbox({ items, index, onClose, onNavigate }: LightboxProps) {
           onClick={(e) => e.stopPropagation()}
         >
           <div className="relative w-full h-full flex flex-col items-center justify-center">
-            {/* 🖼️ صورة */}
             {item.type === "image" && (
               <img
                 src={item.url}
@@ -153,7 +142,6 @@ export function Lightbox({ items, index, onClose, onNavigate }: LightboxProps) {
               />
             )}
 
-            {/* 🎥 فيديو YouTube */}
             {isYouTube && (
               <div className="relative w-full aspect-video max-h-[75vh] rounded-2xl overflow-hidden shadow-2xl bg-black">
                 {!videoStarted ? (
@@ -166,7 +154,8 @@ export function Lightbox({ items, index, onClose, onNavigate }: LightboxProps) {
                       alt={captionText}
                       className="w-full h-full object-cover"
                       onError={(e) => {
-                        e.currentTarget.src = `https://img.youtube.com/vi/${extractYouTubeId(item.url)}/hqdefault.jpg`;
+                        const id = extractYouTubeId(item.url);
+                        e.currentTarget.src = `https://img.youtube.com/vi/${id}/mqdefault.jpg`;
                       }}
                     />
                     <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-colors flex items-center justify-center">
@@ -189,7 +178,6 @@ export function Lightbox({ items, index, onClose, onNavigate }: LightboxProps) {
               </div>
             )}
 
-            {/* 🎥 فيديو Vimeo */}
             {isVimeo && (
               <div className="relative w-full aspect-video max-h-[75vh] rounded-2xl overflow-hidden shadow-2xl bg-black">
                 {!videoStarted ? (
@@ -215,7 +203,6 @@ export function Lightbox({ items, index, onClose, onNavigate }: LightboxProps) {
               </div>
             )}
 
-            {/* 🎥 فيديو مباشر */}
             {isDirectVideo && (
               <div className="relative w-full max-h-[75vh] rounded-2xl overflow-hidden shadow-2xl">
                 <video
@@ -227,7 +214,6 @@ export function Lightbox({ items, index, onClose, onNavigate }: LightboxProps) {
               </div>
             )}
 
-            {/* ✅ العنوان التوضيحي - تم الإصلاح */}
             {captionText && (
               <p className="text-center text-white text-base md:text-lg mt-6 px-4 drop-shadow-lg">
                 {captionText}
