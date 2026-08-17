@@ -12,8 +12,18 @@ import type { GalleryItem } from "../services/types";
 
 // 🔧 دوال مساعدة لمعالجة روابط الفيديو
 function extractYouTubeId(url: string): string {
-  const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&?/]+)/);
-  return match ? match[1] : '';
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=)([^&?/]+)/,
+    /(?:youtu\.be\/)([^&?/]+)/,
+    /(?:youtube\.com\/embed\/)([^&?/]+)/,
+  ];
+  
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match) return match[1];
+  }
+  
+  return '';
 }
 
 function isYouTubeUrl(url: string): boolean {
@@ -24,11 +34,31 @@ function isVimeoUrl(url: string): boolean {
   return url.includes('vimeo.com');
 }
 
-// ✅ دالة لتحديد نوع الميديا بناءً على الرابط
+function isVideoUrl(url: string): boolean {
+  return isYouTubeUrl(url) || 
+         isVimeoUrl(url) || 
+         url.match(/\.(mp4|webm|ogg|mov)(\?.*)?$/i) !== null;
+}
+
+// ✅ دالة محسّنة لجلب thumbnail YouTube
+function getYouTubeThumbnail(url: string, quality: 'default' | 'hq' | 'mq' | 'sd' | 'maxres' = 'maxres'): string {
+  const videoId = extractYouTubeId(url);
+  if (!videoId) return '';
+  
+  const qualityMap = {
+    'default': 'default.jpg',
+    'mq': 'mqdefault.jpg',
+    'hq': 'hqdefault.jpg',
+    'sd': 'sddefault.jpg',
+    'maxres': 'maxresdefault.jpg',
+  };
+  
+  return `https://img.youtube.com/vi/${videoId}/${qualityMap[quality]}`;
+}
+
+// ✅ دالة لتحديد نوع الميديا بذكاء
 function detectMediaType(url: string): "image" | "video" {
-  if (isYouTubeUrl(url) || isVimeoUrl(url) || url.includes('.mp4') || url.includes('.webm')) {
-    return "video";
-  }
+  if (isVideoUrl(url)) return "video";
   return "image";
 }
 
@@ -55,7 +85,6 @@ export default function PortfolioEventPage() {
 
       {event && (
         <>
-          {/* زر الرجوع والتصفح */}
           <div className="pt-28 pb-6 max-w-content mx-auto px-margin-mobile md:px-margin-desktop">
             <Link
               to="/#portfolio"
@@ -78,7 +107,6 @@ export default function PortfolioEventPage() {
             </Link>
           </div>
 
-          {/* ترويسة الفعالية */}
           <header className="max-w-content mx-auto px-margin-mobile md:px-margin-desktop pb-14 pt-4 text-center flex flex-col items-center">
             {event.behind_the_scenes && (
               <div className="mb-6">
@@ -119,7 +147,6 @@ export default function PortfolioEventPage() {
             )}
           </header>
 
-          {/* أقسام الفعالية */}
           <div className="flex flex-col gap-16 md:gap-28 pb-24">
             {[...(event.sections || [])]
               .sort((a: any, b: any) => a.order - b.order)
@@ -299,6 +326,69 @@ function CinematicHeroVideo({
   );
 }
 
+// ✅ Component محسّن لعرض Video Thumbnail
+function VideoThumbnail({ url, caption }: { url: string; caption?: string }) {
+  const [imageError, setImageError] = useState(false);
+  const [currentQuality, setCurrentQuality] = useState<'maxres' | 'hq' | 'mq'>('maxres');
+
+  const handleImageError = () => {
+    if (currentQuality === 'maxres') {
+      setCurrentQuality('hq');
+    } else if (currentQuality === 'hq') {
+      setCurrentQuality('mq');
+    } else {
+      setImageError(true);
+    }
+  };
+
+  if (isYouTubeUrl(url)) {
+    const thumbnailUrl = getYouTubeThumbnail(url, currentQuality);
+    
+    return (
+      <div className="relative w-full aspect-video bg-black">
+        {!imageError && thumbnailUrl ? (
+          <img
+            src={thumbnailUrl}
+            alt={caption ?? "Video"}
+            className="w-full h-full object-cover"
+            onError={handleImageError}
+            loading="lazy"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+            <svg className="w-20 h-20 text-white/30" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M10 15l5.19-3L10 9v6m11.56-7.83c.13.47.22 1.1.28 1.9.07.8.1 1.49.1 2.09L22 12c0 2.19-.16 3.8-.44 4.83-.25.9-.83 1.48-1.73 1.73-.47.13-1.33.22-2.65.28-1.3.07-2.49.1-3.59.1L12 19c-4.19 0-6.8-.16-7.83-.44-.9-.25-1.48-.83-1.73-1.73-.13-.47-.22-1.1-.28-1.9-.07-.8-.1-1.49-.1-2.09L2 12c0-2.19.16-3.8.44-4.83.25-.9.83-1.48 1.73-1.73.47-.13 1.33-.22 2.65-.28 1.3-.07 2.49-.1 3.59-.1L12 5c4.19 0 6.8.16 7.83.44.9.25 1.48.83 1.73 1.73z"/>
+            </svg>
+          </div>
+        )}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <span className="h-16 w-16 rounded-full bg-primary/90 text-black flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform duration-300">
+            <svg className="w-7 h-7 fill-current translate-x-0.5" viewBox="0 0 24 24">
+              <path d="M8 5v14l11-7Z" />
+            </svg>
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  // Fallback لأنواع فيديو أخرى
+  return (
+    <div className="relative w-full aspect-video bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center">
+      <svg className="w-16 h-16 text-white/40" fill="currentColor" viewBox="0 0 24 24">
+        <path d="M8 5v14l11-7z"/>
+      </svg>
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <span className="h-16 w-16 rounded-full bg-primary/90 text-black flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform duration-300">
+          <svg className="w-7 h-7 fill-current translate-x-0.5" viewBox="0 0 24 24">
+            <path d="M8 5v14l11-7Z" />
+          </svg>
+        </span>
+      </div>
+    </div>
+  );
+}
+
 function SectionRenderer({
   section,
   locale,
@@ -360,10 +450,9 @@ function SectionRenderer({
   if (section.type === "gallery") {
     const layout = section.data?.layout || "grid";
     
-    // ✅ قراءة من section.media مباشرة مع تصحيح النوع
     const items: GalleryItem[] = (section.media || []).map((m: any) => ({
       id: String(m.id),
-      type: detectMediaType(m.url), // ✅ استخدام الدالة الذكية
+      type: detectMediaType(m.url),
       url: m.url || "",
       caption: m.caption?.[locale] || m.caption?.en || m.caption || undefined,
     }));
@@ -399,31 +488,7 @@ function SectionRenderer({
                   className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-105"
                 />
               ) : (
-                <div className="relative w-full aspect-video bg-black">
-                  {isYouTubeUrl(item.url) ? (
-                    <img
-                      src={`https://img.youtube.com/vi/${extractYouTubeId(item.url)}/maxresdefault.jpg`}
-                      alt={item.caption ?? "Video"}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        e.currentTarget.src = `https://img.youtube.com/vi/${extractYouTubeId(item.url)}/hqdefault.jpg`;
-                      }}
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-900 to-gray-800">
-                      <svg className="w-16 h-16 text-white/40" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M8 5v14l11-7z"/>
-                      </svg>
-                    </div>
-                  )}
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <span className="h-16 w-16 rounded-full bg-primary/90 text-black flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform duration-300">
-                      <svg className="w-7 h-7 fill-current translate-x-0.5" viewBox="0 0 24 24">
-                        <path d="M8 5v14l11-7Z" />
-                      </svg>
-                    </span>
-                  </div>
-                </div>
+                <VideoThumbnail url={item.url} caption={item.caption} />
               )}
               
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-400 flex items-end p-6">
@@ -441,7 +506,6 @@ function SectionRenderer({
   if (section.type === "people") {
     const heroImageUrl = section.data?.heroImageUrl || "";
     
-    // ✅ الحل الصحيح: استخدام person.gallery مباشرة من الـ API!
     const people = (section.people || []).map((p: any) => ({
       id: String(p.id),
       name: p.name || "",
@@ -449,7 +513,7 @@ function SectionRenderer({
       order: p.order || 0,
       gallery: (p.gallery || []).map((m: any) => ({
         id: String(m.id),
-        type: detectMediaType(m.url), // ✅ تصحيح النوع
+        type: detectMediaType(m.url),
         url: m.url || "",
         caption: m.caption?.[locale] || m.caption?.en || m.caption || undefined,
       })),
