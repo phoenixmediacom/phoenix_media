@@ -100,6 +100,80 @@ export function MediaUploader({
   
   const videoSourceUrl = cloudinaryDirectMp4 || value;
 
+  // async function handleFiles(files: FileList | null) {
+  //   const file = files?.[0];
+  //   if (!file) return;
+
+  //   abortControllerRef.current = new AbortController();
+
+  //   setUploading(true);
+  //   setUploadError(null);
+  //   setUploadProgress(0);
+
+  //   try {
+  //     const formData = new FormData();
+  //     formData.append('file', file);
+  //     formData.append('folder', folder);
+
+  //     console.log('📤 Uploading file:', {
+  //     name: file.name,
+  //     size: file.size,
+  //     type: file.type,
+  //     folder: folder,
+  //   });
+
+  //     const response = await api.post('/api/admin/media/upload', formData, {
+  //       signal: abortControllerRef.current.signal,
+  //       headers: {
+  //         'Content-Type': 'multipart/form-data',
+  //       },
+  //       onUploadProgress: (progressEvent) => {
+  //         if (progressEvent.total) {
+  //           const percentCompleted = Math.round(
+  //             (progressEvent.loaded * 100) / progressEvent.total
+  //           );
+  //           console.log('📊 Progress:', percentCompleted + '%');
+  //           setUploadProgress(percentCompleted);
+  //         }
+  //       },
+  //     });
+
+  //     console.log('✅ Upload response:', response.data);
+  //     const uploadedUrl =
+  //       response.data?.data?.url ||
+  //       response.data?.url ||
+  //       response.data;
+
+  //     if (typeof uploadedUrl === 'string') {
+  //       onChange(uploadedUrl, file);
+  //     } else {
+  //       throw new Error('تنسيق استجابة السيرفر غير صحيح');
+  //     }
+
+  //   } catch (error: any) {
+  //     if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+  //       console.log('Upload canceled by user');
+  //       return;
+  //     }
+
+  //     console.error('❌ Upload failed:', {
+  //     message: error.message,
+  //     response: error.response?.data,
+  //     status: error.response?.status,
+  //   });
+    
+  //     console.error('Upload failed:', error);
+  //     setUploadError(
+  //       error.response?.data?.message || error.message || 'فشل رفع الملف'
+  //     );
+  //   } finally {
+  //     setUploading(false);
+  //     setUploadProgress(0);
+  //     abortControllerRef.current = null;
+  //     if (inputRef.current) inputRef.current.value = '';
+  //   }
+  // }
+
   async function handleFiles(files: FileList | null) {
     const file = files?.[0];
     if (!file) return;
@@ -111,61 +185,113 @@ export function MediaUploader({
     setUploadProgress(0);
 
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('folder', folder);
-
-      console.log('📤 Uploading file:', {
-      name: file.name,
-      size: file.size,
-      type: file.type,
-      folder: folder,
-    });
-
-      const response = await api.post('/api/admin/media/upload', formData, {
-        signal: abortControllerRef.current.signal,
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-        onUploadProgress: (progressEvent) => {
-          if (progressEvent.total) {
-            const percentCompleted = Math.round(
-              (progressEvent.loaded * 100) / progressEvent.total
-            );
-            console.log('📊 Progress:', percentCompleted + '%');
-            setUploadProgress(percentCompleted);
-          }
-        },
+      console.log('📤 Starting upload:', {
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        folder: folder,
       });
 
-      console.log('✅ Upload response:', response.data);
-      const uploadedUrl =
-        response.data?.data?.url ||
-        response.data?.url ||
-        response.data;
+      // ✅ Step 1: Get signature from backend
+      console.log('🔑 Requesting signature from backend...');
+      const signatureResponse = await api.post('/api/admin/media/signature', {
+        folder: folder,
+      });
 
-      if (typeof uploadedUrl === 'string') {
+      const signatureData = signatureResponse.data.data;
+      console.log('✅ Signature received:', {
+        timestamp: signatureData.timestamp,
+        cloud_name: signatureData.cloud_name,
+      });
+
+      // ✅ Step 2: Determine resource type
+      let resourceType = 'auto';
+      if (file.type.startsWith('video/')) {
+        resourceType = 'video';
+      } else if (file.type.startsWith('image/')) {
+        resourceType = 'image';
+      }
+
+      // ✅ Step 3: Prepare form data
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('api_key', signatureData.api_key);
+      formData.append('timestamp', signatureData.timestamp.toString());
+      formData.append('signature', signatureData.signature);
+      formData.append('folder', signatureData.folder);
+      formData.append('use_filename', 'true');
+      formData.append('unique_filename', 'true');
+
+      // ✅ Step 4: Upload to Cloudinary
+      console.log('☁️ Uploading to Cloudinary...');
+      const uploadUrl = `https://api.cloudinary.com/v1_1/${signatureData.cloud_name}/${resourceType}/upload`;
+
+      const xhr = new XMLHttpRequest();
+      
+      xhr.upload.addEventListener('progress', (e) => {
+        if (e.lengthComputable) {
+          const percentComplete = Math.round((e.loaded / e.total) * 100);
+          console.log('📊 Progress:', percentComplete + '%');
+          setUploadProgress(percentComplete);
+        }
+      });
+
+      abortControllerRef.current.signal.addEventListener('abort', () => {
+        xhr.abort();
+      });
+
+      const uploadPromise: Promise<any> = new Promise((resolve, reject) => {
+        xhr.onload = () => {
+          if (xhr.status === 200) {
+            try {
+              const response = JSON.parse(xhr.responseText);
+              resolve(response);
+            } catch (e) {
+              reject(new Error('Invalid response from Cloudinary'));
+            }
+          } else {
+            let errorMessage = `Upload failed: ${xhr.status}`;
+            try {
+              const errorData = JSON.parse(xhr.responseText);
+              errorMessage = errorData.error?.message || errorMessage;
+            } catch {}
+            reject(new Error(errorMessage));
+          }
+        };
+
+        xhr.onerror = () => reject(new Error('Network error'));
+        xhr.ontimeout = () => reject(new Error('Upload timeout'));
+
+        xhr.open('POST', uploadUrl);
+        xhr.timeout = 120000; // 2 minutes
+        xhr.send(formData);
+      });
+
+      const response = await uploadPromise;
+
+      console.log('✅ Upload successful:', response);
+
+      const uploadedUrl = response.secure_url || response.url;
+
+      if (uploadedUrl) {
         onChange(uploadedUrl, file);
       } else {
-        throw new Error('تنسيق استجابة السيرفر غير صحيح');
+        throw new Error('No URL in Cloudinary response');
       }
 
     } catch (error: any) {
-      if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+      if (abortControllerRef.current?.signal.aborted) {
         console.log('Upload canceled by user');
         return;
       }
 
-      console.error('❌ Upload failed:', {
-      message: error.message,
-      response: error.response?.data,
-      status: error.response?.status,
-    });
-    
-      console.error('Upload failed:', error);
+      console.error('❌ Upload failed:', error);
       setUploadError(
-        error.response?.data?.message || error.message || 'فشل رفع الملف'
+        error.response?.data?.message || 
+        error.message || 
+        'فشل رفع الملف'
       );
+
     } finally {
       setUploading(false);
       setUploadProgress(0);
@@ -173,7 +299,7 @@ export function MediaUploader({
       if (inputRef.current) inputRef.current.value = '';
     }
   }
-
+  
   function handleCancelUpload(e: React.MouseEvent) {
     e.stopPropagation();
     if (abortControllerRef.current) {
