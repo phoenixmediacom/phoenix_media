@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useI18n } from "../../i18n";
 import type { GalleryItem } from "../../services/types";
 
 interface LightboxProps {
@@ -19,8 +20,17 @@ function isVimeoUrl(url: string): boolean {
 }
 
 function extractYouTubeId(url: string): string {
-  const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&?/]+)/);
-  return match ? match[1] : '';
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=)([^&?/]+)/,
+    /(?:youtu\.be\/)([^&?/]+)/,
+    /(?:youtube\.com\/embed\/)([^&?/]+)/,
+  ];
+  
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match) return match[1];
+  }
+  return '';
 }
 
 function extractVimeoId(url: string): string {
@@ -33,12 +43,27 @@ function getYouTubeThumbnail(url: string): string {
   return id ? `https://img.youtube.com/vi/${id}/maxresdefault.jpg` : '';
 }
 
+// ✅ دالة مساعدة لعرض Caption
+function getCaptionText(caption: string | { ar?: string; en?: string } | undefined, locale: "ar" | "en"): string {
+  if (!caption) return '';
+  
+  // إذا كان string عادي
+  if (typeof caption === 'string') return caption;
+  
+  // إذا كان object
+  if (typeof caption === 'object') {
+    return caption[locale] || caption.en || caption.ar || '';
+  }
+  
+  return '';
+}
+
 export function Lightbox({ items, index, onClose, onNavigate }: LightboxProps) {
+  const { locale } = useI18n(); // ✅ جلب اللغة الحالية
   const item = items[index];
-  const [videoStarted, setVideoStarted] = useState(false); // ✅ للتحكم بتحميل الفيديو
+  const [videoStarted, setVideoStarted] = useState(false);
 
   useEffect(() => {
-    // Reset عند تغيير العنصر
     setVideoStarted(false);
     
     function onKey(e: KeyboardEvent) {
@@ -59,6 +84,9 @@ export function Lightbox({ items, index, onClose, onNavigate }: LightboxProps) {
   const isDirectVideo = item.type === "video" && !isYouTube && !isVimeo;
 
   const showNavigation = item.type === "image" && items.length > 1;
+
+  // ✅ الحصول على النص الصحيح للـ caption
+  const captionText = getCaptionText(item.caption, locale);
 
   return (
     <AnimatePresence>
@@ -120,7 +148,7 @@ export function Lightbox({ items, index, onClose, onNavigate }: LightboxProps) {
             {item.type === "image" && (
               <img
                 src={item.url}
-                alt={item.caption ?? ""}
+                alt={captionText}
                 className="w-full h-full max-h-[75vh] object-contain rounded-2xl shadow-2xl"
               />
             )}
@@ -129,14 +157,13 @@ export function Lightbox({ items, index, onClose, onNavigate }: LightboxProps) {
             {isYouTube && (
               <div className="relative w-full aspect-video max-h-[75vh] rounded-2xl overflow-hidden shadow-2xl bg-black">
                 {!videoStarted ? (
-                  // ✅ عرض thumbnail قبل التشغيل
                   <div 
                     className="relative w-full h-full cursor-pointer group"
                     onClick={() => setVideoStarted(true)}
                   >
                     <img
                       src={getYouTubeThumbnail(item.url)}
-                      alt={item.caption ?? "Video"}
+                      alt={captionText}
                       className="w-full h-full object-cover"
                       onError={(e) => {
                         e.currentTarget.src = `https://img.youtube.com/vi/${extractYouTubeId(item.url)}/hqdefault.jpg`;
@@ -151,10 +178,9 @@ export function Lightbox({ items, index, onClose, onNavigate }: LightboxProps) {
                     </div>
                   </div>
                 ) : (
-                  // ✅ تحميل iframe فقط عند الضغط
                   <iframe
                     src={`https://www.youtube.com/embed/${extractYouTubeId(item.url)}?autoplay=1&rel=0`}
-                    title={item.caption || "YouTube Video"}
+                    title={captionText || "YouTube Video"}
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
                     className="absolute inset-0 w-full h-full"
@@ -180,7 +206,7 @@ export function Lightbox({ items, index, onClose, onNavigate }: LightboxProps) {
                 ) : (
                   <iframe
                     src={`https://player.vimeo.com/video/${extractVimeoId(item.url)}?autoplay=1`}
-                    title={item.caption || "Vimeo Video"}
+                    title={captionText || "Vimeo Video"}
                     allow="autoplay; fullscreen; picture-in-picture"
                     allowFullScreen
                     className="absolute inset-0 w-full h-full"
@@ -201,10 +227,10 @@ export function Lightbox({ items, index, onClose, onNavigate }: LightboxProps) {
               </div>
             )}
 
-            {/* العنوان التوضيحي */}
-            {item.caption && (
+            {/* ✅ العنوان التوضيحي - تم الإصلاح */}
+            {captionText && (
               <p className="text-center text-white text-base md:text-lg mt-6 px-4 drop-shadow-lg">
-                {item.caption}
+                {captionText}
               </p>
             )}
           </div>
