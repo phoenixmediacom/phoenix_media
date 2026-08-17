@@ -89,7 +89,7 @@ export async function logout(): Promise<void> {
     console.error('Logout error:', error);
   } finally {
     removeToken();
-    window.location.href = '/api/admin/auth/login';
+    window.location.href = '/admin/auth/login';
   }
 }
 
