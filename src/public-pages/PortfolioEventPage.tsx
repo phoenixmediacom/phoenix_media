@@ -24,6 +24,14 @@ function isVimeoUrl(url: string): boolean {
   return url.includes('vimeo.com');
 }
 
+// ✅ دالة لتحديد نوع الميديا بناءً على الرابط
+function detectMediaType(url: string): "image" | "video" {
+  if (isYouTubeUrl(url) || isVimeoUrl(url) || url.includes('.mp4') || url.includes('.webm')) {
+    return "video";
+  }
+  return "image";
+}
+
 export default function PortfolioEventPage() {
   const { slug = "" } = useParams();
   const { t, locale } = useI18n();
@@ -54,7 +62,7 @@ export default function PortfolioEventPage() {
               className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full glass border border-white/10 hover:border-primary/40 text-xs font-mono-label uppercase text-on-surface-variant hover:text-primary transition-all duration-300 hover:scale-105 shadow-sm"
               onClick={(e) => {
                 e.preventDefault();
-                window.history.back(); // ✅ استخدام browser history بدلاً من reload
+                window.history.back();
               }}
             >
               <svg
@@ -151,9 +159,8 @@ function CinematicHeroVideo({
   const videoRef = useRef<HTMLVideoElement>(null);
   const [playing, setPlaying] = useState(false);
   const [muted, setMuted] = useState(true);
-  const [showPoster, setShowPoster] = useState(true); // ✅ إضافة state للـ poster
+  const [showPoster, setShowPoster] = useState(true);
 
-  // 🔍 تحديد نوع الفيديو
   const isYouTube = isYouTubeUrl(videoUrl);
   const isVimeo = isVimeoUrl(videoUrl);
   const isDirectVideo = !isYouTube && !isVimeo;
@@ -166,7 +173,7 @@ function CinematicHeroVideo({
       if (v.paused) {
         v.play();
         setPlaying(true);
-        setShowPoster(false); // ✅ إخفاء poster عند التشغيل
+        setShowPoster(false);
       } else {
         v.pause();
         setPlaying(false);
@@ -177,10 +184,8 @@ function CinematicHeroVideo({
   return (
     <div className="relative w-full h-[70vh] md:h-[85vh] max-w-[1400px] mx-auto overflow-hidden md:rounded-3xl glass border border-white/10 shadow-2xl bg-surface-container-lowest">
       
-      {/* 🎥 فيديو مباشر */}
       {isDirectVideo && (
         <>
-          {/* الـ Poster - يظهر حتى يتم الضغط على Play */}
           {showPoster && posterUrl && (
             <div className="absolute inset-0 z-20">
               <img 
@@ -192,7 +197,6 @@ function CinematicHeroVideo({
             </div>
           )}
 
-          {/* الفيديو */}
           <video
             ref={videoRef}
             src={videoUrl}
@@ -207,7 +211,6 @@ function CinematicHeroVideo({
             onPause={() => setPlaying(false)}
           />
 
-          {/* زر Play/Pause */}
           {showPlayButton && (
             <button
               onClick={togglePlay}
@@ -227,7 +230,6 @@ function CinematicHeroVideo({
             </button>
           )}
 
-          {/* زر كتم الصوت */}
           <button
             onClick={() => setMuted((m) => !m)}
             aria-label={muted ? "Unmute" : "Mute"}
@@ -248,7 +250,6 @@ function CinematicHeroVideo({
         </>
       )}
 
-      {/* 🎥 فيديو YouTube */}
       {isYouTube && (
         <div className="absolute inset-0">
           {posterUrl && !playing && (
@@ -272,7 +273,6 @@ function CinematicHeroVideo({
         </div>
       )}
 
-      {/* 🎥 فيديو Vimeo */}
       {isVimeo && (
         <div className="absolute inset-0">
           {posterUrl && !playing && (
@@ -359,9 +359,11 @@ function SectionRenderer({
 
   if (section.type === "gallery") {
     const layout = section.data?.layout || "grid";
+    
+    // ✅ قراءة من section.media مباشرة مع تصحيح النوع
     const items: GalleryItem[] = (section.media || []).map((m: any) => ({
       id: String(m.id),
-      type: m.media_type === "video" ? "video" : "image",
+      type: detectMediaType(m.url), // ✅ استخدام الدالة الذكية
       url: m.url || "",
       caption: m.caption?.[locale] || m.caption?.en || m.caption || undefined,
     }));
@@ -436,87 +438,78 @@ function SectionRenderer({
     );
   }
 
-if (section.type === "people") {
-  const heroImageUrl = section.data?.heroImageUrl || "";
-  
-  // ✅ استخدام section.media بدلاً من person.gallery
-  const mediaMap = new Map();
-  (section.data?.media || []).forEach((m: any) => {
-    const personId = m.portfolio_person_id;
-    if (!mediaMap.has(personId)) {
-      mediaMap.set(personId, []);
+  if (section.type === "people") {
+    const heroImageUrl = section.data?.heroImageUrl || "";
+    
+    // ✅ الحل الصحيح: استخدام person.gallery مباشرة من الـ API!
+    const people = (section.people || []).map((p: any) => ({
+      id: String(p.id),
+      name: p.name || "",
+      photoUrl: p.image_url || "",
+      order: p.order || 0,
+      gallery: (p.gallery || []).map((m: any) => ({
+        id: String(m.id),
+        type: detectMediaType(m.url), // ✅ تصحيح النوع
+        url: m.url || "",
+        caption: m.caption?.[locale] || m.caption?.en || m.caption || undefined,
+      })),
+    }));
+    
+    if (people.length === 0) {
+      return null;
     }
-    mediaMap.get(personId).push({
-      id: String(m.id),
-      type: m.media_type === "video" ? "video" : "image", // ✅ قراءة من media مباشرة
-      url: m.url || "",
-      caption: m.caption?.[locale] || m.caption?.en || m.caption || undefined,
-    });
-  });
 
-  const people = (section.people || []).map((p: any) => ({
-    id: String(p.id),
-    name: p.name || "",
-    photoUrl: p.image_url || "",
-    order: p.order || 0,
-    gallery: mediaMap.get(p.id) || [], // ✅ استخدام البيانات من mediaMap
-  }));
-  
-  if (people.length === 0) {
-    return null;
-  }
+    return (
+      <div className="relative">
+        {heroImageUrl && (
+          <div className="absolute inset-0 w-full h-full">
+            <img 
+              src={heroImageUrl} 
+              alt="Team Background" 
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-surface/95 via-surface/85 to-surface/95 backdrop-blur-sm" />
+          </div>
+        )}
 
-  return (
-    <div className="relative">
-      {heroImageUrl && (
-        <div className="absolute inset-0 w-full h-full">
-          <img 
-            src={heroImageUrl} 
-            alt="Team Background" 
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-surface/95 via-surface/85 to-surface/95 backdrop-blur-sm" />
-        </div>
-      )}
-
-      <div className="relative z-10 py-20 md:py-32">
-        <div className={container}>
-          <div className="flex flex-wrap gap-8 md:gap-12 justify-center">
-            {people
-              .sort((a: any, b: any) => a.order - b.order)
-              .map((person: any) => {
-                const gallery = Array.isArray(person.gallery) ? person.gallery : [];
-                
-                return (
-                  <motion.button
-                    key={person.id}
-                    initial={{ opacity: 0, y: 25 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, amount: 0.3 }}
-                    transition={{ duration: 0.5 }}
-                    onClick={() => gallery.length > 0 && onOpenLightbox(gallery, 0)}
-                    disabled={gallery.length === 0}
-                    className="flex flex-col items-center gap-3.5 group disabled:cursor-default disabled:opacity-60"
-                  >
-                    <span className="h-28 w-28 md:h-36 md:w-36 rounded-full overflow-hidden p-1 bg-white/5 border-2 border-white/20 group-hover:border-primary group-hover:shadow-bloom transition-all duration-500 relative">
-                      <img
-                        src={person.photoUrl}
-                        alt={person.name}
-                        className="h-full w-full object-cover rounded-full transition-transform duration-500 group-hover:scale-105"
-                      />
-                    </span>
-                    <span className="text-base md:text-lg font-medium text-on-surface group-hover:text-primary transition-colors drop-shadow-lg">
-                      {person.name}
-                    </span>
-                  </motion.button>
-                );
-              })}
+        <div className="relative z-10 py-20 md:py-32">
+          <div className={container}>
+            <div className="flex flex-wrap gap-8 md:gap-12 justify-center">
+              {people
+                .sort((a: any, b: any) => a.order - b.order)
+                .map((person: any) => {
+                  const gallery = Array.isArray(person.gallery) ? person.gallery : [];
+                  
+                  return (
+                    <motion.button
+                      key={person.id}
+                      initial={{ opacity: 0, y: 25 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, amount: 0.3 }}
+                      transition={{ duration: 0.5 }}
+                      onClick={() => gallery.length > 0 && onOpenLightbox(gallery, 0)}
+                      disabled={gallery.length === 0}
+                      className="flex flex-col items-center gap-3.5 group disabled:cursor-default disabled:opacity-60"
+                    >
+                      <span className="h-28 w-28 md:h-36 md:w-36 rounded-full overflow-hidden p-1 bg-white/5 border-2 border-white/20 group-hover:border-primary group-hover:shadow-bloom transition-all duration-500 relative">
+                        <img
+                          src={person.photoUrl}
+                          alt={person.name}
+                          className="h-full w-full object-cover rounded-full transition-transform duration-500 group-hover:scale-105"
+                        />
+                      </span>
+                      <span className="text-base md:text-lg font-medium text-on-surface group-hover:text-primary transition-colors drop-shadow-lg">
+                        {person.name}
+                      </span>
+                    </motion.button>
+                  );
+                })}
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  );
-}
+    );
+  }
 
   return null;
 }
