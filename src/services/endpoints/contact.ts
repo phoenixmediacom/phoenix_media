@@ -1,4 +1,4 @@
-import { request } from "../apiClient";
+import { API_BASE_URL, request } from "../apiClient";
 import type { ContactInfo, ContactSubmission } from "../types";
 
 /**
@@ -273,9 +273,7 @@ export async function exportSubmissions(params: {
   selectedIds?: string[];
 }): Promise<Blob> {
   const token = localStorage.getItem('auth_token');
-  const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
-
-  const response = await fetch(`${baseURL}/admin/contact/submissions/export`, {
+  const response = await fetch(`${API_BASE_URL}/api/admin/contact/submissions/export`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

@@ -15,6 +15,7 @@
     "framer-motion": "^11.11.17",
     "libphonenumber-js": "^1.13.10",
     "lucide-react": "^1.31.0",
+    "motion": "^13.2.0",
     "ogl": "^1.0.11",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

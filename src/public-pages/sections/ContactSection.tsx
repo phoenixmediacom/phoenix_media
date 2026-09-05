@@ -9,8 +9,8 @@ import { getContactInfo, submitContactForm } from "../../services/endpoints/cont
 import { Section } from "../../components/layout/Section";
 import { Field, Input, Textarea } from "../../components/ui/Form";
 import { Button } from "../../components/ui/Button";
-import { LoadingState } from "../../components/ui/AsyncStates";
 import { SocialIcons } from "../../components/layout/SocialIcons";
+import { LoaderSkeleton } from "../../components/ui/loaders-skeleton";
 
 interface FormData {
   name: string;
@@ -327,7 +327,22 @@ export function ContactSection() {
 
         {/* معلومات الاتصال */}
         <div className="flex flex-col gap-6 md:gap-8 h-full">
-          {loading && <LoadingState />}
+          {loading && !info && (
+            <div className="flex flex-col gap-5">
+              <div className="rounded-2xl border border-white/5 bg-surface-container/80 p-5">
+                <LoaderSkeleton width="30%" height={14} className="mb-3" />
+                <LoaderSkeleton height={16} className="mb-2" />
+                <LoaderSkeleton height={16} className="mb-2" />
+                <LoaderSkeleton width="60%" height={16} />
+              </div>
+              <div className="rounded-2xl border border-white/5 bg-surface-container/80 p-5">
+                <LoaderSkeleton width="30%" height={14} className="mb-3" />
+                <LoaderSkeleton height={16} className="mb-2" />
+                <LoaderSkeleton height={16} className="mb-2" />
+                <LoaderSkeleton width="60%" height={16} />
+              </div>
+            </div>
+          )}
           {info && (
             <div className="glass rounded-2xl p-6 md:p-8 flex flex-col gap-5">
               <ContactRow label={t.contact.emailLabel} value={info.email} href={`mailto:${info.email}`} />

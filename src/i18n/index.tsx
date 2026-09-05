@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { ar } from "./ar";
 import { en, Dictionary } from "./en";
 import { Language } from "../services/types";
+import { API_BASE_URL } from "../services/apiClient";
 
 export interface LanguageContextType {
   lang: Language;
@@ -74,8 +75,6 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const fetchLanguageData = async () => {
       try {
         setIsLoadingLanguage(true);
-        const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api';
-
         // ✅ 1. جلب اللغة الافتراضية
         let defaultLang: Language = "ar";
         

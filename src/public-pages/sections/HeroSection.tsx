@@ -6,7 +6,8 @@ import { getHero } from "../../services/endpoints/hero";
 import { useHeroProgress } from "../../components/layout/HeroProgressContext";
 import { VideoBackground } from "./VideoBackground";
 import { SocialIcons } from "../../components/layout/SocialIcons";
-import { LoadingState, ErrorState } from "../../components/ui/AsyncStates";
+import { ErrorState } from "../../components/ui/AsyncStates";
+import { LoaderSkeleton } from "../../components/ui/loaders-skeleton";
 
 export function HeroSection() {
   const { t, locale } = useI18n();
@@ -25,8 +26,15 @@ export function HeroSection() {
       )}
 
       <div className="relative z-10 text-center px-margin-mobile">
-        {loading && <LoadingState />}
         {error && <ErrorState message={error} onRetry={refetch} />}
+        {loading && !hero && (
+          <div className="flex flex-col items-center">
+            <LoaderSkeleton width={112} height={112} borderRadius={9999} className="mb-6" />
+            <LoaderSkeleton width={280} height={36} className="mb-4" />
+            <LoaderSkeleton width={160} height={16} className="mb-8" />
+            <LoaderSkeleton width={140} height={32} borderRadius={9999} />
+          </div>
+        )}
         {hero && (
           <motion.div
             style={{ opacity: 1 - progress, transform: `translateY(${progress * -24}px)` }}

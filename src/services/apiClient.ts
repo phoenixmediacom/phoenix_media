@@ -1,7 +1,7 @@
 import axios, { AxiosError, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig  } from 'axios';
 
 // تكوين API
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://phoenix-media-api.onrender.com/api';
+export const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 // إنشاء Axios instance
 const api = axios.create({
@@ -110,4 +110,25 @@ export class ApiError extends Error {
     super(message);
     this.name = 'ApiError';
   }
+}
+
+export function getHttpStatus(error: unknown): number | undefined {
+  return axios.isAxiosError(error) ? error.response?.status : undefined;
+}
+
+export function isServerUnavailable(error: unknown): boolean {
+  if (!axios.isAxiosError(error)) return false;
+
+  const message = (error.message ?? "").toLowerCase();
+  const code = error.code ?? "";
+
+  return (
+    !error.response ||
+    code === "ERR_NETWORK" ||
+    code === "ECONNABORTED" ||
+    message.includes("network error") ||
+    message.includes("failed to fetch") ||
+    message.includes("connection refused") ||
+    message.includes("err_connection_refused")
+  );
 }

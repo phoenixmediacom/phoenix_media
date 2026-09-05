@@ -14,10 +14,22 @@ export function LoadingState({ label }: { label?: string }) {
   );
 }
 
-export function ErrorState({ message, onRetry }: { message?: string; onRetry?: () => void }) {
+export function ErrorState({
+  title,
+  message,
+  statusCode,
+  onRetry,
+}: {
+  title?: string;
+  message?: string;
+  statusCode?: number | null;
+  onRetry?: () => void;
+}) {
   const { t } = useI18n();
   return (
     <div className="flex flex-col items-center justify-center gap-4 py-16 text-center">
+      {title && <h1 className="text-on-surface font-display text-headline-sm">{title}</h1>}
+      {statusCode && <span className="text-error text-body-lg">خطأ {statusCode}</span>}
       <span className="text-error text-body-lg">{message ?? t.common.error}</span>
       {onRetry && (
         <Button variant="secondary" size="sm" onClick={onRetry}>

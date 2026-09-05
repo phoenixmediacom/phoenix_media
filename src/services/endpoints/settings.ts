@@ -16,9 +16,11 @@ export async function getPublicSettings(): Promise<GeneralSettings> {
   try {
     const response = await api.get<{ data: any }>("/api/public/settings");
     return mapSettingsFromApi(response.data?.data || response.data);
-  } catch (error: any) {
-    console.error("Failed to fetch public settings:", error);
-    return mapSettingsFromApi({});
+  } catch (error) {
+    if (import.meta.env.DEV) {
+      console.error("Failed to fetch public settings:", error);
+    }
+    throw error;
   }
 }
 

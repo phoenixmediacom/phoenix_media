@@ -1,34 +1,49 @@
 import { createBrowserRouter, RouterProvider, Outlet, type RouteObject, Navigate  } from "react-router-dom";
+import { Suspense, lazy } from "react";
 
-// Public Page
+// Public Page (loaded eagerly: the homepage must render immediately)
 import HomePage from "./public-pages/HomePage";
 import PortfolioEventPage from "./public-pages/PortfolioEventPage";
 
-// Auth Pages
-import LoginPage from "./admin/pages/auth/LoginPage";
-import ForgotPasswordPage from './admin/pages/auth/ForgotPasswordPage';
-import ResetPasswordPage from './admin/pages/auth/ResetPasswordPage';
+// Auth Pages (lazy: not needed unless the admin area is visited)
+const LoginPage = lazy(() => import("./admin/pages/auth/LoginPage"));
+const ForgotPasswordPage = lazy(() => import("./admin/pages/auth/ForgotPasswordPage"));
+const ResetPasswordPage = lazy(() => import("./admin/pages/auth/ResetPasswordPage"));
 
-// Admin Pages
-import HeroAdminPage from "./admin/pages/HeroAdminPage";
-import AboutAdminPage from "./admin/pages/AboutAdminPage";
-import ClientsAdminPage from "./admin/pages/ClientsAdminPage";
-import EquipmentAdminPage from "./admin/pages/EquipmentAdminPage";
-import ServicesAdminPage from "./admin/pages/ServicesAdminPage";
-import PortfolioAdminListPage from "./admin/pages/PortfolioAdminListPage";
-import PortfolioAdminEditPage from "./admin/pages/PortfolioAdminEditPage";
-import ContactAdminPage from "./admin/pages/ContactAdminPage";
-import SocialAdminPage from "./admin/pages/SocialAdminPage";
-import SeoAdminPage from "./admin/pages/SeoAdminPage";
-import LanguageAdminPage from "./admin/pages/LanguageAdminPage";
-import SettingsAdminPage from "./admin/pages/SettingsAdminPage";
-import DashboardPage from "./admin/pages/DashboardPage";
-import MessagesAdminPage from './admin/pages/MessagesAdminPage';
+// Admin Pages (lazy: not needed unless the admin area is visited)
+const HeroAdminPage = lazy(() => import("./admin/pages/HeroAdminPage"));
+const AboutAdminPage = lazy(() => import("./admin/pages/AboutAdminPage"));
+const ClientsAdminPage = lazy(() => import("./admin/pages/ClientsAdminPage"));
+const EquipmentAdminPage = lazy(() => import("./admin/pages/EquipmentAdminPage"));
+const ServicesAdminPage = lazy(() => import("./admin/pages/ServicesAdminPage"));
+const PortfolioAdminListPage = lazy(() => import("./admin/pages/PortfolioAdminListPage"));
+const PortfolioAdminEditPage = lazy(() => import("./admin/pages/PortfolioAdminEditPage"));
+const ContactAdminPage = lazy(() => import("./admin/pages/ContactAdminPage"));
+const SocialAdminPage = lazy(() => import("./admin/pages/SocialAdminPage"));
+const SeoAdminPage = lazy(() => import("./admin/pages/SeoAdminPage"));
+const LanguageAdminPage = lazy(() => import("./admin/pages/LanguageAdminPage"));
+const SettingsAdminPage = lazy(() => import("./admin/pages/SettingsAdminPage"));
+const DashboardPage = lazy(() => import("./admin/pages/DashboardPage"));
+const MessagesAdminPage = lazy(() => import("./admin/pages/MessagesAdminPage"));
 
 // Layout & Guards
 import { AuthGuard } from "./admin/layout/AuthGuard";
 import { AdminLayout } from "./admin/layout/AdminLayout";
 import { isAuthenticated } from "./services/apiClient";
+
+function AdminSuspense({ children }: { children: React.ReactNode }) {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-surface">
+          <div className="h-8 w-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+        </div>
+      }
+    >
+      {children}
+    </Suspense>
+  );
+}
 
 
 /**
@@ -105,24 +120,32 @@ export const routes: RouteObject[] = [
   { 
     path: "/admin/auth/login", 
     element: (
-      <AuthRedirect>
-        <LoginPage />
-      </AuthRedirect>
+      <AdminSuspense>
+        <AuthRedirect>
+          <LoginPage />
+        </AuthRedirect>
+      </AdminSuspense>
     ),
     errorElement: <RouteErrorFallback /> 
   },
   { 
     path: "/admin/auth/forgot-password", 
     element: (
-      <AuthRedirect>
-        <ForgotPasswordPage />
-      </AuthRedirect>
+      <AdminSuspense>
+        <AuthRedirect>
+          <ForgotPasswordPage />
+        </AuthRedirect>
+      </AdminSuspense>
     ),
     errorElement: <RouteErrorFallback /> 
   },
   { 
     path: "/admin/auth/reset-password", 
-    element: <ResetPasswordPage />,
+    element: (
+      <AdminSuspense>
+        <ResetPasswordPage />
+      </AdminSuspense>
+    ),
     errorElement: <RouteErrorFallback /> 
   },
 
@@ -134,7 +157,11 @@ export const routes: RouteObject[] = [
   // Protected Admin Routes
   {
     path: "/admin",
-    element: <ProtectedAdminShell />,
+    element: (
+      <AdminSuspense>
+        <ProtectedAdminShell />
+      </AdminSuspense>
+    ),
     errorElement: <RouteErrorFallback />,
     children: [
       // Redirect /admin to /admin/dashboard

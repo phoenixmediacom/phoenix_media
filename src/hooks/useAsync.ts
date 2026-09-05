@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { getHttpStatus, isServerUnavailable } from "../services/apiClient";
 
 export interface AsyncState<T> {
   data: T | null;
   loading: boolean;
   error: string | null;
+  errorStatus: number | null;
+  serverUnavailable: boolean;
   refetch: () => void;
 }
 
@@ -17,6 +20,8 @@ export function useAsync<T>(fetcher: () => Promise<T>, deps: unknown[] = []): As
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [errorStatus, setErrorStatus] = useState<number | null>(null);
+  const [serverUnavailable, setServerUnavailable] = useState(false);
   const [reloadToken, setReloadToken] = useState(0);
   const fetcherRef = useRef(fetcher);
   fetcherRef.current = fetcher;
@@ -25,6 +30,8 @@ export function useAsync<T>(fetcher: () => Promise<T>, deps: unknown[] = []): As
     let cancelled = false;
     setLoading(true);
     setError(null);
+    setErrorStatus(null);
+    setServerUnavailable(false);
 
     fetcherRef
       .current()
@@ -41,6 +48,8 @@ export function useAsync<T>(fetcher: () => Promise<T>, deps: unknown[] = []): As
         } else {
           setError("Something went wrong.");
         }
+        setErrorStatus(getHttpStatus(err) ?? null);
+        setServerUnavailable(isServerUnavailable(err));
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -54,5 +63,5 @@ export function useAsync<T>(fetcher: () => Promise<T>, deps: unknown[] = []): As
 
   const refetch = useCallback(() => setReloadToken((n) => n + 1), []);
 
-  return { data, loading, error, refetch };
+  return { data, loading, error, errorStatus, serverUnavailable, refetch };
 }

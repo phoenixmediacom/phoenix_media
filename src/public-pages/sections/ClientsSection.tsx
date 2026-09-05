@@ -4,6 +4,7 @@ import { useAsync } from "../../hooks/useAsync";
 import { getPublicClients } from "../../services/endpoints/clients";
 import { useEffect, useState } from "react";
 import { useTheme } from "../../contexts/ThemeContext"; // ✅ إضافة
+import { LoaderSkeleton } from "../../components/ui/loaders-skeleton";
 
 interface Client {
   id: string;
@@ -159,8 +160,10 @@ export function ClientsSection() {
         </motion.div>
 
         {loading && (
-          <div className="flex justify-center py-12">
-            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          <div className="flex flex-wrap justify-center gap-6 py-6">
+            {Array.from({ length: 8 }).map((_, index) => (
+              <LoaderSkeleton key={index} width={110} height={56} borderRadius={12} />
+            ))}
           </div>
         )}
 

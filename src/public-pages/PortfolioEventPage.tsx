@@ -4,10 +4,13 @@ import { motion } from "framer-motion";
 import { useI18n } from "../i18n";
 import { useAsync } from "../hooks/useAsync";
 import { getPortfolioBySlug } from "../services/endpoints/portfolio";
-import { LoadingState, ErrorState } from "../components/ui/AsyncStates";
+import { ErrorState } from "../components/ui/AsyncStates";
 import { BehindTheScenesBadge } from "../components/ui/Card";
 import { Nav } from "../components/layout/Nav";
 import { Lightbox } from "./sections/Lightbox";
+import { PublicPageGate } from "../components/PublicPageGate";
+import { getPublicSettings } from "../services/endpoints/settings";
+import { hasIntroPlayed, markIntroPlayed } from "../utils/introSession";
 import type { GalleryItem } from "../services/types";
 
 // 🔧 دوال مساعدة لمعالجة روابط الفيديو
@@ -62,21 +65,50 @@ function detectMediaType(url: string): "image" | "video" {
 export default function PortfolioEventPage() {
   const { slug = "" } = useParams();
   const { t, locale } = useI18n();
-  const { data: event, loading, error, refetch } = useAsync(() => getPortfolioBySlug(slug), [slug]);
+  const {
+    data: event,
+    loading: eventLoading,
+    error: eventError,
+    errorStatus: eventErrorStatus,
+    serverUnavailable: eventServerUnavailable,
+    refetch: refetchEvent,
+  } = useAsync(() => getPortfolioBySlug(slug), [slug]);
+  const {
+    data: settings,
+    loading: settingsLoading,
+    error: settingsError,
+    errorStatus: settingsErrorStatus,
+    serverUnavailable: settingsServerUnavailable,
+    refetch: refetchSettings,
+  } = useAsync(() => getPublicSettings(), []);
+  const [introComplete, setIntroComplete] = useState(() => hasIntroPlayed());
   const [lightbox, setLightbox] = useState<{ items: GalleryItem[]; index: number } | null>(null);
 
+  const refetch = () => {
+    refetchEvent();
+    refetchSettings();
+  };
+
   return (
+    <PublicPageGate
+      introComplete={introComplete}
+      loading={eventLoading || settingsLoading}
+      maintenanceMode={settings?.maintenanceMode === true}
+      serverUnavailable={eventServerUnavailable || settingsServerUnavailable}
+      error={settingsError ?? eventError}
+      errorStatus={settingsErrorStatus ?? eventErrorStatus}
+      onIntroComplete={() => {
+        markIntroPlayed();
+        setIntroComplete(true);
+      }}
+      onRetry={refetch}
+    >
     <div className="min-h-screen bg-surface text-on-surface">
       <Nav />
 
-      {loading && (
+      {eventError && (
         <div className="pt-36 pb-20">
-          <LoadingState />
-        </div>
-      )}
-      {error && (
-        <div className="pt-36 pb-20">
-          <ErrorState message={error} onRetry={refetch} />
+          <ErrorState message={eventError} statusCode={eventErrorStatus} onRetry={refetch} />
         </div>
       )}
 
@@ -168,6 +200,7 @@ export default function PortfolioEventPage() {
         />
       )}
     </div>
+    </PublicPageGate>
   );
 }
 

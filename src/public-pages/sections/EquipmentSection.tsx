@@ -4,7 +4,8 @@ import { useAsync } from "../../hooks/useAsync";
 import { getPublicEquipment } from "../../services/endpoints/equipment";
 import { useEffect, useState } from "react";
 import { Section } from "../../components/layout/Section";
-import { LoadingState, ErrorState } from "../../components/ui/AsyncStates";
+import { ErrorState } from "../../components/ui/AsyncStates";
+import { LoaderSkeleton } from "../../components/ui/loaders-skeleton";
 import { useTheme } from "../../contexts/ThemeContext"; // ✅ إضافة
 
 interface EquipmentItem {
@@ -160,8 +161,19 @@ export function EquipmentSection() {
           </p>
         </motion.div>
 
-        {loading && <LoadingState />}
         {error && <ErrorState message={error} onRetry={refetch} />}
+
+        {loading && !equipment && (
+          <div className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-4">
+              {Array.from({ length: 4 }).map((_, index) => (
+                <div key={index} className="rounded-2xl border border-white/5 bg-surface-container/80 p-4">
+                  <LoaderSkeleton width={90} height={90} borderRadius={18} className="mx-auto" />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {equipment && equipment.length > 0 && (
           <div className="space-y-4">

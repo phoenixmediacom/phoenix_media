@@ -3,7 +3,8 @@ import { useI18n } from "../../i18n";
 import { useAsync } from "../../hooks/useAsync";
 import { getAbout } from "../../services/endpoints/about";
 import { Eyebrow } from "../../components/ui/Card";
-import { LoadingState, ErrorState } from "../../components/ui/AsyncStates";
+import { ErrorState } from "../../components/ui/AsyncStates";
+import { LoaderSkeleton } from "../../components/ui/loaders-skeleton";
 import { AnimatedBackground } from "./AnimatedBackground";
 
 export function AboutSection() {
@@ -18,8 +19,20 @@ export function AboutSection() {
       {about && <AnimatedBackground variant={about.backgroundVariant} />}
 
       <div className="relative z-10 mx-auto w-full max-w-7xl px-6 md:px-10">
-        {loading && <LoadingState />}
         {error && <ErrorState message={error} onRetry={refetch} />}
+
+        {loading && !about && (
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            <div>
+              <LoaderSkeleton width={120} height={14} className="mb-5" />
+              <LoaderSkeleton width="85%" height={32} className="mb-6" />
+              <LoaderSkeleton height={16} className="mb-3" />
+              <LoaderSkeleton height={16} className="mb-3" />
+              <LoaderSkeleton width="70%" height={16} />
+            </div>
+            <LoaderSkeleton height={420} borderRadius={16} />
+          </div>
+        )}
 
         {about && (
           <div className="grid md:grid-cols-2 gap-12 items-center">

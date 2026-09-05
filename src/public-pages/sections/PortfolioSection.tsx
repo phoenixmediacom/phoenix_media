@@ -5,7 +5,8 @@ import { useAsync } from "../../hooks/useAsync";
 import { getPublicPortfolio } from "../../services/endpoints/portfolio";
 import { Section } from "../../components/layout/Section";
 import { BehindTheScenesBadge } from "../../components/ui/Card";
-import { LoadingState, ErrorState } from "../../components/ui/AsyncStates";
+import { ErrorState } from "../../components/ui/AsyncStates";
+import { LoaderSkeleton } from "../../components/ui/loaders-skeleton";
 import type { PortfolioEvent } from "../../services/types";
 
 function EventTile({
@@ -92,8 +93,18 @@ export function PortfolioSection() {
         </p>
       </motion.div>
 
-      {loading && <LoadingState />}
       {error && <ErrorState message={error} onRetry={refetch} />}
+      {loading && !events && (
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, index) => (
+            <div key={index} className="rounded-2xl border border-white/5 bg-surface-container/80 p-3">
+              <LoaderSkeleton height={260} borderRadius={18} className="mb-4" />
+              <LoaderSkeleton width="65%" height={18} className="mb-2" />
+              <LoaderSkeleton width="45%" height={14} />
+            </div>
+          ))}
+        </div>
+      )}
       {events && events.length === 0 && (
         <p className="text-center text-on-surface-variant py-12">{t.portfolio.empty}</p>
       )}

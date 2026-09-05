@@ -34,7 +34,7 @@ phoenix_media
 ├─ postcss.config.js
 ├─ public
 │  ├─ logo.png
-│  └─ phoenix-logo.svg
+│  └─ video.mp4
 ├─ README.md
 ├─ src
 │  ├─ admin
@@ -80,7 +80,8 @@ phoenix_media
 │  │  │  ├─ SeoHead.tsx
 │  │  │  ├─ SocialIcon.tsx
 │  │  │  └─ SocialIcons.tsx
-│  │  ├─ SimplePhoenixLoader.tsx
+│  │  ├─ MaintenancePage.tsx
+│  │  └─ VideoIntro.tsx
 │  │  └─ ui
 │  │     ├─ AsyncStates.tsx
 │  │     ├─ Button.tsx

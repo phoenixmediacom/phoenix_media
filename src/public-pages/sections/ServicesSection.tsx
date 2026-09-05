@@ -4,7 +4,8 @@ import { useAsync } from "../../hooks/useAsync";
 import { getPublicServices } from "../../services/endpoints/services";
 import { Section } from "../../components/layout/Section";
 import { Card } from "../../components/ui/Card";
-import { LoadingState, ErrorState } from "../../components/ui/AsyncStates";
+import { ErrorState } from "../../components/ui/AsyncStates";
+import { LoaderSkeleton } from "../../components/ui/loaders-skeleton";
 import type { ServiceIcon } from "../../services/types";
 
 function ServiceIconView({ icon }: { icon: ServiceIcon }) {
@@ -42,8 +43,20 @@ export function ServicesSection() {
         </p>
       </motion.div>
 
-      {loading && <LoadingState />}
       {error && <ErrorState message={error} onRetry={refetch} />}
+      {loading && !services && (
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <div key={index} className="rounded-2xl border border-white/5 bg-surface-container/80 p-5">
+              <LoaderSkeleton width={52} height={52} borderRadius={12} className="mb-4" />
+              <LoaderSkeleton width="70%" height={18} className="mb-3" />
+              <LoaderSkeleton height={12} className="mb-2" />
+              <LoaderSkeleton height={12} className="mb-2" />
+              <LoaderSkeleton width="65%" height={12} />
+            </div>
+          ))}
+        </div>
+      )}
       {services && services.length === 0 && (
         <p className="text-center text-on-surface-variant">{t.services.empty}</p>
       )}

@@ -9,32 +9,39 @@ import { ServicesSection } from "./sections/ServicesSection";
 import { PortfolioSection } from "./sections/PortfolioSection";
 import { ContactSection } from "./sections/ContactSection";
 import { BrandCorner } from "./sections/BrandCorner";
-import { SimplePhoenixLoader } from "../components/SimplePhoenixLoader";
+import { PublicPageGate } from "../components/PublicPageGate";
 import { useAsync } from "../hooks/useAsync";
-import { getHero } from "../services/endpoints/hero";
+import { getPublicSettings } from "../services/endpoints/settings";
 import { SeoHead } from "../components/layout/SeoHead";
+import { hasIntroPlayed, markIntroPlayed } from "../utils/introSession";
 
 export default function HomePage() {
-  const { loading: heroLoading } = useAsync(() => getHero(), []);
-  const [showContent, setShowContent] = useState(false);
+  const {
+    data: settings,
+    loading,
+    error,
+    errorStatus,
+    serverUnavailable,
+    refetch,
+  } = useAsync(() => getPublicSettings(), []);
+  const [introComplete, setIntroComplete] = useState(() => hasIntroPlayed());
 
   return (
-    <>
+    <PublicPageGate
+      introComplete={introComplete}
+      loading={loading}
+      maintenanceMode={settings?.maintenanceMode === true}
+      serverUnavailable={serverUnavailable}
+      error={error}
+      errorStatus={errorStatus}
+      onIntroComplete={() => {
+        markIntroPlayed();
+        setIntroComplete(true);
+      }}
+      onRetry={refetch}
+    >
       <SeoHead />
-
-      {/* ✅ Loader الجديد البسيط */}
-      {!showContent && (
-        <SimplePhoenixLoader
-          isLoading={heroLoading}
-          onComplete={() => setShowContent(true)}
-        />
-      )}
-
-      {/* المحتوى */}
-      <div style={{ 
-        opacity: showContent ? 1 : 0, 
-        transition: "opacity 0.5s ease" 
-      }}>
+      <div>
         <HeroProgressProvider>
           <Nav />
           <BrandCorner />
@@ -49,6 +56,6 @@ export default function HomePage() {
           </main>
         </HeroProgressProvider>
       </div>
-    </>
+    </PublicPageGate>
   );
 }
