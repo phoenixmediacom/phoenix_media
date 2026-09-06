@@ -149,9 +149,10 @@ export default function HeroAdminPage() {
         <Field label="Logo" htmlFor="logo">
           <MediaUploader
             value={form.logoUrl}
-            onChange={(url: string, file?: File) => {
-              setForm({ ...form, logoUrl: url });
-              if (file) setLogoFile(file);
+            onChange={(url) => {
+              setForm((prev) => (prev ? { ...prev, logoUrl: url } : prev));
+
+              setLogoFile(null);
             }}
             accept="image/*"
           />
