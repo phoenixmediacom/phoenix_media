@@ -4,15 +4,15 @@
   "framework": "vite",
   "rewrites": [
     {
-      "source": "/",
+      "source": "/(.*)",
       "has": [
         {
           "type": "header",
           "key": "user-agent",
-          "value": "(.*(whatsapp|facebookexternalhit|twitterbot|linkedinbot|telegrambot).*)"
+          "value": "(.*(googlebot|bingbot|yandex|baiduspider|twitterbot|facebookexternalhit|rogerbot|linkedinbot|embedly|quora link preview|showyouhaveit|outbrain|pinterest|slackbot|vkShare|W3C_Validator|whatsapp|telegrambot).*)"
         }
       ],
-      "destination": "/api/seo-meta"
+      "destination": "https://service.prerender.io/https://www.phoenixmediacom.com/$1"
     },
     {
       "source": "/(.*)",
