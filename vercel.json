@@ -4,8 +4,15 @@
   "framework": "vite",
   "rewrites": [
     {
-      "source": "/api/seo-meta",
-      "destination": "/api/seo-meta.js"
+      "source": "/",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(.*(whatsapp|facebookexternalhit|twitterbot|linkedinbot|telegrambot).*)"
+        }
+      ],
+      "destination": "/api/seo-meta"
     },
     {
       "source": "/(.*)",
