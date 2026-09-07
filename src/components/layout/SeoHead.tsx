@@ -1,78 +1,51 @@
-import { useEffect } from "react";
-import { useAsync } from "../../hooks/useAsync";
-import { getSeoSettings } from "../../services/endpoints/seo";
-import { getPublicSettings } from "../../services/endpoints/settings";
+// D:\Project\phoenix_media\src\components\layout\SeoHead.tsx
+import { Helmet } from 'react-helmet-async';
 
-export function SeoHead() {
-  const { data: seo, loading: seoLoading } = useAsync(() => getSeoSettings(), []);
-  const { data: settings, loading: settingsLoading } = useAsync(() => getPublicSettings(), []);
+interface SeoHeadProps {
+  title?: string;
+  description?: string;
+  image?: string;
+  url?: string;
+  type?: string;
+  jsonLd?: Record<string, any>;
+}
 
-  useEffect(() => {
-    if (seoLoading || settingsLoading) return;
+export function SeoHead({
+  title = "Phoenix Media | بيت إنتاج سينمائي وإعلامي",
+  description = "شركة إنتاج سينمائي وإعلامي متخصصة في صناعة المحتوى الإبداعي، التغطيات الميدانية، والأفلام التوثيقية بأعلى معايير الجودة.",
+  image = "https://www.phoenixmediacom.com/og-image.jpg",
+  url = "https://www.phoenixmediacom.com",
+  type = "website",
+  jsonLd,
+}: SeoHeadProps) {
+  return (
+    <Helmet>
+      {/* Dynamic Title */}
+      <title>{title}</title>
 
-    // 1. تحديد العنوان النهائي
-    const finalTitle = seo?.pageTitle || settings?.browserTabTitle || settings?.siteName || "Phoenix Media | بيت إنتاج سينمائي";
-    document.title = finalTitle;
+      {/* Meta Directives */}
+      <meta name="description" content={description} />
+      <link rel="canonical" href={url} />
 
-    // دالة مساعدة لتحديث أو إنشاء الـ meta tags
-    const updateMeta = (selector: string, attrName: string, attrValue: string, content: string) => {
-      if (!content) return;
-      
-      let element = document.querySelector(selector) as HTMLMetaElement;
-      if (!element) {
-        element = document.createElement("meta");
-        element.setAttribute(attrName, attrValue);
-        document.head.appendChild(element);
-      }
-      element.setAttribute("content", content);
-    };
+      {/* Open Graph / Facebook / WhatsApp */}
+      <meta property="og:type" content={type} />
+      <meta property="og:title" content={title} />
+      <meta property="og:description" content={description} />
+      <meta property="og:image" content={image} />
+      <meta property="og:url" content={url} />
 
-    // 2. الوصف (Description)
-    const finalDescription = seo?.metaDescription || "Phoenix Media - شركة إنتاج سينمائي وإعلامي متخصصة في صناعة المحتوى الإبداعي بأعلى معايير الجودة.";
-    updateMeta('meta[name="description"]', "name", "description", finalDescription);
-    updateMeta('meta[property="og:description"]', "property", "og:description", finalDescription);
-    updateMeta('meta[name="twitter:description"]', "name", "twitter:description", finalDescription);
+      {/* Twitter Cards */}
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:title" content={title} />
+      <meta name="twitter:description" content={description} />
+      <meta name="twitter:image" content={image} />
 
-    // 3. الكلمات المفتاحية (Keywords)
-    if (seo?.keywords && Array.isArray(seo.keywords) && seo.keywords.length > 0) {
-      updateMeta('meta[name="keywords"]', "name", "keywords", seo.keywords.join(", "));
-    }
-
-    // 4. العنوان للمشاركات (OG Title)
-    updateMeta('meta[property="og:title"]', "property", "og:title", finalTitle);
-    updateMeta('meta[name="twitter:title"]', "name", "twitter:title", finalTitle);
-
-    // 5. الشعار وصورة المشاركة (OG Image Handling)
-    // الأولوية: صورة SEO -> الشعار المرفوع في Settings -> الشعار الثابت في الموقع
-    const fallbackLogo = `${window.location.origin}/logo.png`;
-    let rawImage = seo?.ogImageUrl || settings?.favicon || fallbackLogo;
-
-    // تحويل الرابط إلى Absolute URL إذا كان مساراً نسبياً
-    let finalOgImage = rawImage;
-    if (rawImage && !rawImage.startsWith("http://") && !rawImage.startsWith("https://")) {
-      const cleanPath = rawImage.startsWith("/") ? rawImage : `/${rawImage}`;
-      finalOgImage = `${window.location.origin}${cleanPath}`;
-    }
-
-    updateMeta('meta[property="og:image"]', "property", "og:image", finalOgImage);
-    updateMeta('meta[property="og:image:secure_url"]', "property", "og:image:secure_url", finalOgImage);
-    updateMeta('meta[name="twitter:image"]', "name", "twitter:image", finalOgImage);
-    updateMeta('meta[name="twitter:card"]', "name", "twitter:card", "summary_large_image");
-
-    // 6. Favicon
-    const faviconUrl = settings?.favicon || "/logo.png";
-    let favicon = document.querySelector('link[rel="icon"]') as HTMLLinkElement;
-    if (favicon) {
-      favicon.href = faviconUrl;
-    } else {
-      favicon = document.createElement("link");
-      favicon.rel = "icon";
-      favicon.type = "image/png";
-      favicon.href = faviconUrl;
-      document.head.appendChild(favicon);
-    }
-
-  }, [seo, seoLoading, settings, settingsLoading]);
-
-  return null;
+      {/* Structured Data (JSON-LD) */}
+      {jsonLd && (
+        <script type="application/ld+json">
+          {JSON.stringify(jsonLd)}
+        </script>
+      )}
+    </Helmet>
+  );
 }

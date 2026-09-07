@@ -1,28 +1,31 @@
+// D:\Project\phoenix_media\src\main.tsx
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import { HelmetProvider } from "react-helmet-async"; // ✅ إضافة Provider
 import "./index.css";
 import App from "./App";
 
-//   Font Awesome
+// Font Awesome
 import '@fortawesome/fontawesome-free/css/all.min.css'
 
-// ✅ إخفاء تحذيرات Cloudinary والـ Intervention
+// إخفاء التحذيرات الثانوية
 const originalWarn = console.warn;
 console.warn = (...args: any[]) => {
   const msg = args.join(' ');
-  // تجاهل تحذيرات محددة
   if (
     msg.includes('[Intervention]') || 
     msg.includes('Slow network') ||
     msg.includes('fonts.gstatic.com')
   ) {
-    return; // لا تطبع التحذير
+    return;
   }
   originalWarn.apply(console, args);
 };
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <App />
+    <HelmetProvider> {/* ✅ التغليف هنا */}
+      <App />
+    </HelmetProvider>
   </StrictMode>,
 );

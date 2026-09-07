@@ -1,3 +1,9 @@
 User-agent: *
 Allow: /
+Allow: /portfolio/
+
+# حظر زواحف جوجل عن أرشفة لوحة التحكم والإدارة
+Disallow: /admin/
+Disallow: /admin/*
+
 Sitemap: https://www.phoenixmediacom.com/sitemap.xml

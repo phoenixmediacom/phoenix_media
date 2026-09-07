@@ -11,7 +11,8 @@ import { Lightbox } from "./sections/Lightbox";
 import { PublicPageGate } from "../components/PublicPageGate";
 import { getPublicSettings } from "../services/endpoints/settings";
 import { hasIntroPlayed, markIntroPlayed } from "../utils/introSession";
-import type { GalleryItem } from "../services/types";
+import type { GalleryItem, PortfolioSection } from "../services/types";
+import { SeoHead } from "../components/layout/SeoHead";
 
 // 🔧 دوال مساعدة لمعالجة روابط الفيديو
 function extractYouTubeId(url: string): string {
@@ -89,6 +90,40 @@ export default function PortfolioEventPage() {
     refetchSettings();
   };
 
+// ✅ استخراج القيم المتوافقة تماماً مع types.ts بدون أي أخطاء TypeScript
+  const projectTitle = event?.title?.[locale] || event?.title?.en || event?.title?.ar || "";
+  
+  // البحث عن أول نص مكتوب داخل الأقسام لاستخدامه كـ meta description
+  const textSection = event?.sections?.find(
+    (sec): sec is Extract<PortfolioSection, { type: "text" }> => sec.type === "text"
+  );
+  const sectionBody = textSection?.body?.[locale] || textSection?.body?.en || textSection?.body?.ar;
+  const projectDescription = sectionBody || `${projectTitle} - Phoenix Media`;
+
+  // استخدام cover_image_url كصورة أساسية للأرشفة والمشاركة (مع fallback لشعار الشركة/العميل)
+  const projectImage = 
+    event?.cover_image_url || 
+    event?.company_logo_url || 
+    event?.client_logo_url || 
+    "https://www.phoenixmediacom.com/og-image.jpg";
+
+  const projectUrl = `https://www.phoenixmediacom.com/portfolio/${slug}`;
+
+  // Structured Data بأسلوب JSON-LD
+  const creativeWorkSchema = event ? {
+    "@context": "https://schema.org",
+    "@type": "CreativeWork",
+    "name": projectTitle,
+    "headline": projectTitle,
+    "image": projectImage,
+    "description": projectDescription,
+    "provider": {
+      "@type": "Organization",
+      "name": "Phoenix Media",
+      "url": "https://www.phoenixmediacom.com"
+    }
+  } : undefined;
+
   return (
     <PublicPageGate
       introComplete={introComplete}
@@ -103,6 +138,18 @@ export default function PortfolioEventPage() {
       }}
       onRetry={refetch}
     >
+      {/*  إرسال البيانات إلى SeoHead */}
+      {event && (
+        <SeoHead
+          title={`${projectTitle} | Phoenix Media`}
+          description={projectDescription}
+          image={projectImage}
+          url={projectUrl}
+          type="article"
+          jsonLd={creativeWorkSchema}
+        />
+      )}
+
     <div className="min-h-screen bg-surface text-on-surface">
       <Nav />
 

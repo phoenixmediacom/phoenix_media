@@ -26,6 +26,21 @@ export default function HomePage() {
   } = useAsync(() => getPublicSettings(), []);
   const [introComplete, setIntroComplete] = useState(() => hasIntroPlayed());
 
+  const organizationSchema = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Phoenix Media",
+    "alternateName": "فينكس ميديا",
+    "url": "https://www.phoenixmediacom.com",
+    "logo": "https://www.phoenixmediacom.com/og-image.jpg",
+    "description": "شركة إنتاج سينمائي وإعلامي متخصصة في صناعة المحتوى الإبداعي بأعلى معايير الجودة.",
+    "sameAs": [
+      "https://www.facebook.com/phoenixmediacom",
+      "https://www.instagram.com/phoenixmediacom",
+      "https://www.linkedin.com/company/phoenixmediacom"
+    ]
+  };
+
   return (
     <PublicPageGate
       introComplete={introComplete}
@@ -40,7 +55,12 @@ export default function HomePage() {
       }}
       onRetry={refetch}
     >
-      <SeoHead />
+      {/* ✅ إرسال البيانات إلى SeoHead */}
+      <SeoHead 
+        title="Phoenix Media | بيت إنتاج سينمائي وإعلامي"
+        description="شركة إنتاج سينمائي وإعلامي متخصصة في صناعة المحتوى الإبداعي والتغطيات الميدانية."
+        jsonLd={organizationSchema}
+      />
       <div>
         <HeroProgressProvider>
           <Nav />
